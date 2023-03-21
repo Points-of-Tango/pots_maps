@@ -36,7 +36,7 @@ export default {
       default: () => []
     }
   },
-  data() {
+  data () {
     return {
       organizer: '',
       infoOptions: {
@@ -62,11 +62,11 @@ export default {
       this.populateMap()
     }
   },
-  mounted() {
+  mounted () {
     this.$refs.mapRef.$mapPromise.then((map) => {
       this.markers = []
       this.location.forEach((element) => {
-        if (element.location !== undefined && element.section === "Events") {
+        if (element.location !== undefined && element.section === 'Events') {
           map.panTo({
             lat: element.location.latitude,
             lng: element.location.longitude
@@ -89,7 +89,7 @@ export default {
             city: element.city,
             section: element.section
           })
-        } else if (element.location !== undefined && element.section === "Teachers") {
+        } else if (element.location !== undefined && element.section === 'Teachers') {
           map.panTo({
             lat: element.location.latitude,
             lng: element.location.longitude
@@ -113,7 +113,7 @@ export default {
     })
   },
   methods: {
-    populateMap() {
+    populateMap () {
       this.$refs.mapRef.$mapPromise.then((map) => {
         this.markers = []
         this.location.forEach((element) => {
@@ -143,7 +143,7 @@ export default {
         })
       })
     },
-    toggleInfoWindow(item, index) {
+    toggleInfoWindow (item, index) {
       this.zoomLevel = 13
       this.center = {
         lat: item.lat,
@@ -200,7 +200,7 @@ export default {
         this.currentMidx = index
       }
     },
-    setPlace(place) {
+    setPlace (place) {
       this.currentPlace = place
     },
     geolocate: function () {

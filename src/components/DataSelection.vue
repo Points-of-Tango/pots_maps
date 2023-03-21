@@ -13,7 +13,7 @@
       <b-container>
         <b-row class="my-2">
           <b-col class="d-flex justify-content-center">
-            <b-form-select v-model="selectedRegion">
+            <b-form-select v-model="selectedRegion" class="w-100">
               <template #first>
                 <b-form-select-option
                   disabled
@@ -129,7 +129,8 @@
           <b-col class="d-flex justify-content-center">
             <b-form-select
               v-model="selectedRegion"
-              class="w-25 mx-2"
+              :class="isMobile ? 'w-100': 'w-25'"
+              class="mx-2"
             >
               <template #first>
                 <b-form-select-option
@@ -209,107 +210,126 @@ export default {
     filtered: {
       type: Boolean,
       default: false
-    },
+    }
   },
-  data() {
-    const now = new Date();
+  data () {
+    const now = new Date()
     const today = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate()
-    );
+    )
     return {
       min: today,
+      isMobile: false,
+      isTablet: false,
       regionIsSelected: false,
-      selectedRegion: "",
+      selectedRegion: '',
       isBusy: false,
       typeSelectedFilter: null,
       dateFromFilter: null,
       cityFilter: null,
       options: [
-        "MILONGA",
-        "PRACTICA",
-        "CLASS",
-        "WORKSHOP",
-        "PRIVATE",
-        "FESTIVAL",
-        "RETREAT",
-        "VACATION",
-        "MARATHON",
+        'MILONGA',
+        'PRACTICA',
+        'CLASS',
+        'WORKSHOP',
+        'PRIVATE',
+        'FESTIVAL',
+        'RETREAT',
+        'VACATION',
+        'MARATHON'
       ],
       sortedRegion: [
-        { key: "ENG_E", text: "England - East" },
-        { key: "ENG_EML", text: "England - East Midlands" },
-        { key: "ENG_GLN", text: "England - Greater London" },
-        { key: "ENG_NE", text: "England - North East" },
-        { key: "ENG_NW", text: "England - North West" },
-        { key: "ENG_SE", text: "England - South East" },
-        { key: "ENG_SW", text: "England - South West" },
-        { key: "ENG_WML", text: "England - West Midlands" },
-        { key: "ENG_H", text: 'England - Yorkshire and the Humber' },
-        { key: "N_IRE", text: "Northern Ireland" },
-        { key: "SCO", text: "Scotland" },
-        { key: "WALES", text: "Wales" },
-        { key: "ONLINE", text: "UK - Online" },
-      ],
-    };
+        { key: 'ENG_E', text: 'England - East' },
+        { key: 'ENG_EML', text: 'England - East Midlands' },
+        { key: 'ENG_GLN', text: 'England - Greater London' },
+        { key: 'ENG_NE', text: 'England - North East' },
+        { key: 'ENG_NW', text: 'England - North West' },
+        { key: 'ENG_SE', text: 'England - South East' },
+        { key: 'ENG_SW', text: 'England - South West' },
+        { key: 'ENG_WML', text: 'England - West Midlands' },
+        { key: 'ENG_H', text: 'England - Yorkshire and the Humber' },
+        { key: 'N_IRE', text: 'Northern Ireland' },
+        { key: 'SCO', text: 'Scotland' },
+        { key: 'WALES', text: 'Wales' },
+        { key: 'ONLINE', text: 'UK - Online' }
+      ]
+    }
   },
   watch: {
-    '$route'(to, from) {
+    '$route' (to, from) {
       this.selectedRegion = ''
     },
     selectedRegion: function (newValue, oldValue) {
-      this.$emit("updateRegion", newValue);
-      this.regionIsSelected = true;
-      this.selectedRegion = newValue;
-      this.cityFilter = null;
-      this.dateFromFilter = null;
-      this.typeSelectedFilter = null;
+      this.$emit('updateRegion', newValue)
+      this.regionIsSelected = true
+      this.selectedRegion = newValue
+      this.cityFilter = null
+      this.dateFromFilter = null
+      this.typeSelectedFilter = null
       if (
         this.cityFilter === null ||
         this.dateFromFilter === undefined ||
         this.typeSelectedFilter === null
       ) {
-        if (this.$route.name === "Events" || this.$route.name === "Home") {
-          this.$emit("getEvents", this.selectedRegion);
+        if (this.$route.name === 'Events' || this.$route.name === 'Home') {
+          this.$emit('getEvents', this.selectedRegion)
         } else {
-          this.$emit("getTeachers", this.selectedRegion);
+          this.$emit('getTeachers', this.selectedRegion)
         }
       } else {
-        this.$emit("getEventsFilter");
+        this.$emit('getEventsFilter')
       }
-    },
+    }
   },
   methods: {
-    applyFilter() {
-      const type = this.typeSelectedFilter;
-      const daterange = this.dateFromFilter;
-      const city = this.cityFilter;
+    applyFilter () {
+      const type = this.typeSelectedFilter
+      const daterange = this.dateFromFilter
+      const city = this.cityFilter
 
       const obj = {
         cityFilter: city,
         dateFromFilter: daterange,
         typeSelectedFilter: type,
-        selectedRegion: this.selectedRegion,
-      };
+        selectedRegion: this.selectedRegion
+      }
 
-      this.$emit("getEventsFilter", obj);
+      this.$emit('getEventsFilter', obj)
     },
-    capitalizeWord(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1);
+    capitalizeWord (string) {
+      return string.charAt(0).toUpperCase() + string.slice(1)
     },
-    clearFilter() {
-      this.cityFilter = null;
-      this.dateFromFilter = null;
-      this.typeSelectedFilter = null;
-      this.$emit("getEvents");
-      this.$emit("removeFilterState", false);
+    clearFilter () {
+      this.cityFilter = null
+      this.dateFromFilter = null
+      this.typeSelectedFilter = null
+      this.$emit('getEvents')
+      this.$emit('removeFilterState', false)
     },
-    clearCityFilter() {
-      this.cityFilter = null;
+    clearCityFilter () {
+      this.cityFilter = null
     },
+    resizeWindow () {
+      if (window.innerWidth < 1024) {
+        this.isMobile = true
+        this.isTablet = false
+      } else if (window.innerWidth > 1023 && window.innerWidth < 1201) {
+        this.isTablet = true
+        this.isMobile = false
+      } else {
+        this.isTablet = true
+      }
+    }
   },
-};
+  destroyed () {
+    window.removeEventListener('resize', this.resizeWindow)
+  },
+  mounted () {
+    window.addEventListener('resize', this.resizeWindow)
+  }
+}
 </script>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>

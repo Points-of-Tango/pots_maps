@@ -45,3 +45,11 @@
     </b-navbar-nav>
   </b-navbar>
 </template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+
+.nav-item>a {
+  font-family: 'Righteous', cursive;
+}
+</style>

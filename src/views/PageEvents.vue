@@ -51,24 +51,24 @@
 </template>
 
 <script>
-import EventsList from "@/views/EventsList.vue";
-import axios from "@/axios";
-import DataSelection from "@/components/DataSelection.vue";
+import EventsList from '@/views/EventsList.vue'
+import axios from '@/axios'
+import DataSelection from '@/components/DataSelection.vue'
 
 export default {
   components: {
     EventsList,
     DataSelection,
     GoogleMapView: () => import(/* webpackChunkName: "google-map" */'@/components/GoogleMap.vue'),
-    TeachersList: () => import(/* webpackChunkName: "teachers-list" */'@/views/TeachersList.vue'),
+    TeachersList: () => import(/* webpackChunkName: "teachers-list" */'@/views/TeachersList.vue')
   },
-  data() {
-    const now = new Date();
+  data () {
+    const now = new Date()
     const today = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate()
-    );
+    )
     return {
       tabIndex: 0,
       min: today,
@@ -80,116 +80,116 @@ export default {
       cityFilter: null,
       typeSelectedFilter: null,
       dateFromFilter: null,
-      selectedRegion: "",
+      selectedRegion: '',
       region: null,
       sortedRegion: [
-        { key: "ENG_E", text: "England - East" },
-        { key: "ENG_EML", text: "England - East Midlands" },
-        { key: "ENG_GLN", text: "England - Greater London" },
-        { key: "ENG_NE", text: "England - North East" },
-        { key: "ENG_NW", text: "England - North West" },
-        { key: "ENG_SE", text: "England - South East" },
-        { key: "ENG_SW", text: "England - South West" },
-        { key: "ENG_WML", text: "England - West Midlands" },
-        { key: "ENG_YH", text: "England - Yorkshire and the Humber" },
-        { key: "N_IRE", text: "Northern Ireland" },
-        { key: "SCO", text: "Scotland" },
-        { key: "WALES", text: "Wales" },
-        { key: "ONLINE", text: "UK - Online" },
-      ],
-    };
+        { key: 'ENG_E', text: 'England - East' },
+        { key: 'ENG_EML', text: 'England - East Midlands' },
+        { key: 'ENG_GLN', text: 'England - Greater London' },
+        { key: 'ENG_NE', text: 'England - North East' },
+        { key: 'ENG_NW', text: 'England - North West' },
+        { key: 'ENG_SE', text: 'England - South East' },
+        { key: 'ENG_SW', text: 'England - South West' },
+        { key: 'ENG_WML', text: 'England - West Midlands' },
+        { key: 'ENG_YH', text: 'England - Yorkshire and the Humber' },
+        { key: 'N_IRE', text: 'Northern Ireland' },
+        { key: 'SCO', text: 'Scotland' },
+        { key: 'WALES', text: 'Wales' },
+        { key: 'ONLINE', text: 'UK - Online' }
+      ]
+    }
   },
   computed: {
-    disableView() {
+    disableView () {
       if (this.events.length > 0) {
         return false
       }
-      return this.teachers.length <= 0;
+      return this.teachers.length <= 0
     }
   },
   watch: {
     selectedRegion: function (newValue, oldValue) {
-      this.getEvents(newValue);
+      this.getEvents(newValue)
     },
-    '$route'() {
+    '$route' () {
       this.teachers = []
       this.events = []
       this.tabIndex = 0
-    },
+    }
   },
-  created() {
+  created () {
     axios.interceptors.request.use(
       (successfulReq) => {
-        this.isLoading = true;
-        return successfulReq;
+        this.isLoading = true
+        return successfulReq
       },
       (error) => {
-        this.isLoading = true;
-        return Promise.reject(error);
+        this.isLoading = true
+        return Promise.reject(error)
       }
-    );
+    )
 
     axios.interceptors.response.use(
       (successRes) => {
-        this.isLoading = false;
-        return successRes;
+        this.isLoading = false
+        return successRes
       },
       (error) => {
-        this.isLoading = false;
-        Promise.reject(error);
+        this.isLoading = false
+        Promise.reject(error)
       }
-    );
+    )
   },
   methods: {
-    updateRegion(region) {
-      this.region = region;
+    updateRegion (region) {
+      this.region = region
     },
-    removeFilterState(bool) {
-      this.filtered = bool;
+    removeFilterState (bool) {
+      this.filtered = bool
     },
-    isOneWord(string) {
-      return string.length > 0 && string.split("\\s+").length === 1;
+    isOneWord (string) {
+      return string.length > 0 && string.split('\\s+').length === 1
     },
-    getEventsFilter(evt) {
-      this.isBusy = true;
-      this.events = [];
+    getEventsFilter (evt) {
+      this.isBusy = true
+      this.events = []
 
       const body = {
         city: evt.cityFilter,
         from: new Date(evt.dateFromFilter).getTime() / 1000,
-        types: evt.typeSelectedFilter,
-      };
+        types: evt.typeSelectedFilter
+      }
 
       axios
         .post(`events/filter/ukata/GBR/${this.selectedRegion}`, body)
         .then((response) => {
           const dateFormatOptions = {
-            month: "2-digit",
-            day: "2-digit",
-          };
+            month: '2-digit',
+            day: '2-digit'
+          }
           response.data.results.forEach((element) => {
             const timestampStarted =
-              (element.from.seconds + element.from.nanos) * 1000;
+              (element.from.seconds + element.from.nanos) * 1000
             const timestampEnded =
-              (element.to.seconds + element.to.nanos) * 1000;
+              (element.to.seconds + element.to.nanos) * 1000
 
-            if (element.type === "MILONGA_CLASS") {
-              element.type = "Milonga & Class/Workshop";
+            if (element.type === 'MILONGA_CLASS') {
+              element.type = 'Milonga & Class/Workshop'
             }
-            if (element.type === "PRACTICA_CLASS") {
-              element.type = "Practica & Class/Workshop";
+            if (element.type === 'PRACTICA_CLASS') {
+              element.type = 'Practica & Class/Workshop'
             }
-            if (element.type === "FESTIVAL_MARATHON") {
-              element.type = "Festival / Marathon";
+            if (element.type === 'FESTIVAL_MARATHON') {
+              element.type = 'Festival / Marathon'
             }
-            if (element.type === "FESTIVAL_CHAMPIONSHIP") {
-              element.type = "Festival / Championship";
+            if (element.type === 'FESTIVAL_CHAMPIONSHIP') {
+              element.type = 'Festival / Championship'
             }
 
             if (this.isOneWord(element.type)) {
               element.type =
                 element.type.charAt(0).toUpperCase() +
-                element.type.slice(1).toLowerCase();
+                element.type.slice(1).toLowerCase()
             }
 
             // logoUrl, name, from - to, city, address & postCode, type, associationName
@@ -201,47 +201,47 @@ export default {
               name: element.name,
               organizer: element.associationName,
               from: `${new Date(timestampStarted).toLocaleString(
-                "en-GB",
+                'en-GB',
                 dateFormatOptions
               )} at ${new Date(timestampStarted).toLocaleString(
-                "en-GB",
+                'en-GB',
                 {
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: false,
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: false
                 }
               )}`,
               to: `${new Date(timestampEnded).toLocaleString(
-                "en-GB",
+                'en-GB',
                 dateFormatOptions
               )} at ${new Date(timestampEnded).toLocaleString(
-                "en-GB",
+                'en-GB',
                 {
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: false,
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: false
                 }
               )}`,
               date: `From: ${new Date(
                 timestampStarted
               ).toLocaleString(
-                "en-GB",
+                'en-GB',
                 dateFormatOptions
               )} at ${new Date(timestampStarted).toLocaleString(
-                "en-GB",
+                'en-GB',
                 {
-                  hour: "numeric",
-                  minute: "numeric",
+                  hour: 'numeric',
+                  minute: 'numeric'
                 }
               )} - To: ${new Date(timestampEnded).toLocaleString(
-                "en-GB",
+                'en-GB',
                 dateFormatOptions
               )} at ${new Date(timestampEnded).toLocaleString(
-                "en-GB",
+                'en-GB',
                 {
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: true,
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true
                 }
               )}`,
               address: `${element.address}`,
@@ -250,24 +250,24 @@ export default {
               postCode: element.postCode,
               location: element.location,
               keywords: element.keywords,
-              section: "Events"
-            });
-          });
+              section: 'Events'
+            })
+          })
         })
         .catch((error) => {
-          this.events = [];
-          console.error(error);
+          this.events = []
+          console.error(error)
         })
         .finally(() => {
-          this.$root.$emit("bv::refresh::table", "my-table");
-          this.isBusy = false;
-          this.totalRows = this.events.length;
-          this.filtered = true;
-        });
+          this.$root.$emit('bv::refresh::table', 'my-table')
+          this.isBusy = false
+          this.totalRows = this.events.length
+          this.filtered = true
+        })
     },
-    async getTeachers(region) {
-      this.isBusy = true;
-      this.teachers = [];
+    async getTeachers (region) {
+      this.isBusy = true
+      this.teachers = []
 
       await axios
         .get(
@@ -287,75 +287,75 @@ export default {
               postcode: item.postCode,
               location: item.location,
               picture: item.coverUrl,
-              section: "Teachers"
+              section: 'Teachers'
             })
           })
         })
         .catch((error) => {
-          this.teachers = [];
-          console.error(error);
+          this.teachers = []
+          console.error(error)
         })
         .finally(() => {
-          this.$root.$emit("bv::refresh::table", "my-table");
-          this.isBusy = false;
-          this.totalRows = this.teachers.length;
-        });
+          this.$root.$emit('bv::refresh::table', 'my-table')
+          this.isBusy = false
+          this.totalRows = this.teachers.length
+        })
     },
-    formatTimestampDate(timestamp) {
+    formatTimestampDate (timestamp) {
       const dateFormatOptions = {
-        month: "2-digit",
-        day: "2-digit",
-      };
+        month: '2-digit',
+        day: '2-digit'
+      }
       return new Date(timestamp).toLocaleString(
-        "en-GB",
+        'en-GB',
         dateFormatOptions
-      );
+      )
     },
-    formatTimestampTime(timestamp) {
+    formatTimestampTime (timestamp) {
       const timeFormatOptions = {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: false,
-      };
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+      }
       return new Date(timestamp).toLocaleString(
-        "en-GB",
+        'en-GB',
         timeFormatOptions
-      );
+      )
     },
-    async getEvents(region) {
-      this.isBusy = true;
-      this.events = [];
+    async getEvents (region) {
+      this.isBusy = true
+      this.events = []
 
       await axios
         .get(`events/GBR/1?association=true&region=${region}`)
         .then((response) => {
           response.data.results.forEach((element) => {
             const timestampStarted =
-              (element.from.seconds + element.from.nanos) * 1000;
+              (element.from.seconds + element.from.nanos) * 1000
             const timestampEnded =
-              (element.to.seconds + element.to.nanos) * 1000;
+              (element.to.seconds + element.to.nanos) * 1000
 
             switch (element.type) {
-              case "MILONGA_CLASS":
-                element.type = "Milonga & Class/Workshop";
-                break;
-              case "PRACTICA_CLASS":
-                element.type = "Practica & Class/Workshop";
-                break;
-              case "FESTIVAL_MARATHON":
-                element.type = "Festival / Marathon";
-                break;
-              case "FESTIVAL_CHAMPIONSHIP":
-                element.type = "Festival / Championship";
-                break;
+              case 'MILONGA_CLASS':
+                element.type = 'Milonga & Class/Workshop'
+                break
+              case 'PRACTICA_CLASS':
+                element.type = 'Practica & Class/Workshop'
+                break
+              case 'FESTIVAL_MARATHON':
+                element.type = 'Festival / Marathon'
+                break
+              case 'FESTIVAL_CHAMPIONSHIP':
+                element.type = 'Festival / Championship'
+                break
               default:
-                break;
+                break
             }
 
             if (this.isOneWord(element.type)) {
               element.type =
                 element.type.charAt(0).toUpperCase() +
-                element.type.slice(1).toLowerCase();
+                element.type.slice(1).toLowerCase()
             }
 
             // logoUrl, name, from - to, city, address & postCode, type, associationName
@@ -386,23 +386,23 @@ export default {
               city: element.city,
               postCode: element.postCode,
               location: element.location,
-              section: "Events"
-            });
-          });
+              section: 'Events'
+            })
+          })
         })
         .catch((error) => {
-          this.events = [];
-          console.error(error);
+          this.events = []
+          console.error(error)
         })
         .finally(() => {
-          this.$root.$emit("bv::refresh::table", "my-table");
-          this.isBusy = false;
-          this.totalRows = this.events.length;
-        });
-      this.isLoading = false;
-    },
-  },
-};
+          this.$root.$emit('bv::refresh::table', 'my-table')
+          this.isBusy = false
+          this.totalRows = this.events.length
+        })
+      this.isLoading = false
+    }
+  }
+}
 </script>
 
 <style lang="scss">

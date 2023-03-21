@@ -8,27 +8,27 @@
 <script>
 export default {
   components: {
-    NavbarHeader: () => import(/*webpackChunkName: "navbar"*/ '@/components/NavbarHeader.vue')
+    NavbarHeader: () => import(/* webpackChunkName: "navbar" */ '@/components/NavbarHeader.vue')
   },
-  destroyed() {
-    window.removeEventListener("resize", this.resizeWindow);
+  destroyed () {
+    window.removeEventListener('resize', this.resizeWindow)
   },
-  mounted() {
-    window.addEventListener("resize", this.resizeWindow);
+  mounted () {
+    window.addEventListener('resize', this.resizeWindow)
   },
   methods: {
-    resizeWindow() {
+    resizeWindow () {
       if (window.innerWidth < 1024) {
-        this.$isMobile = true;
-        this.$isTablet = false;
+        this.$isMobile = true
+        this.$isTablet = false
       } else if (window.innerWidth > 1023 && window.innerWidth < 1201) {
-        this.$isTablet = true;
-        this.$isMobile = false;
+        this.$isTablet = true
+        this.$isMobile = false
       } else {
-        this.$isTablet = true;
+        this.$isTablet = true
       }
-    },
-  },
+    }
+  }
 }
 </script>
 

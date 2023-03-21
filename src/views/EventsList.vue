@@ -97,9 +97,19 @@
             <p>{{ data.value }}</p>
           </template>
           <template #cell(address)="data">
-            <p>{{ data.item.address }}</p>
-            <p>{{ data.item.postCode }}</p>
-            <p>{{ data.item.city }}</p>
+            <p>
+              <span>
+                {{ data.item.address }}
+              </span>
+              <br>
+              <span>
+                {{ data.item.postCode }}
+              </span>
+              <br>
+              <span>
+                <p>{{ data.item.city }}</p>
+              </span>
+            </p>
           </template>
           <template #cell(type)="data">
             {{ data.item.type }}
@@ -139,26 +149,26 @@ export default {
     events: {
       type: Array,
       required: true,
-      default: () => [],
+      default: () => []
     },
     selectedRegion: {
       type: String,
       default: null
-    },
+    }
   },
-  data() {
+  data () {
     return {
       tabActive: false,
       totalRows: 1,
       currentPage: 1,
       perPage: 25,
-      fields: ["date", "name", "organizer", "address", "type"],
+      fields: ['date', 'name', 'organizer', 'address', 'type'],
       isBusy: false,
-      searchKeyword: "",
-    };
+      searchKeyword: ''
+    }
   },
   computed: {
-    eventList() {
+    eventList () {
       return this.events.filter(
         (item) =>
           !this.searchKeyword ||
@@ -171,24 +181,24 @@ export default {
           item.address
             .toLowerCase()
             .includes(this.searchKeyword.toLowerCase())
-      );
-    },
+      )
+    }
   },
   watch: {
     events: function (newVal, oldVal) {
-      this.totalRows = this.events.length;
-    },
+      this.totalRows = this.events.length
+    }
   },
-  mounted() {
-    this.$root.$on("bv::dropdown::show", (bvEvent) => { });
+  mounted () {
+    this.$root.$on('bv::dropdown::show', (bvEvent) => { })
   },
   methods: {
-    viewEvents(args) {
+    viewEvents (args) {
       window.open(
         `https://points-of-tango.web.app/events/view?country=${args.country}&region=${this.selectedRegion}&eventId=${args.id}`,
-        "_blank"
-      );
-    },
-  },
-};
+        '_blank'
+      )
+    }
+  }
+}
 </script>
