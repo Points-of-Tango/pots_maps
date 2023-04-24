@@ -29,7 +29,7 @@ const router = new VueRouter({
 
 router.afterEach((to, from) => {
   Vue.nextTick(() => {
-    document.title = to.meta.title ? to.meta.title : 'Ukata Events Map'
+    document.title = to.meta.title ? to.meta.title : 'Ukata Tango Map'
   })
 })
 

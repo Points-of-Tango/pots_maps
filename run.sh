@@ -1,3 +1,4 @@
 #!/bin/bash
+npm install --legacy-peer-deps
 export NODE_OPTIONS=--openssl-legacy-provider
-serve -s dist
+npm run build
