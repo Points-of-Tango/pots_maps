@@ -5,12 +5,10 @@
     style="background-color: #343538;"
   >
     <b-navbar-brand
-      href="https://www.pointsoftango.com"
-      target="_blank"
-    >
+      href="https://argentinetango.co.uk">
       <img
-        src="@/assets/pots_logo_bar.png"
-        alt="Pots Logo"
+        src="@/assets/UKATA.png"
+        alt="UK Tango Association"
         height="40"
       >
     </b-navbar-brand>
@@ -36,13 +34,15 @@
         </b-nav-item>
       </b-navbar-nav>
     </b-collapse>
-    <b-navbar-nav class="ml-auto">
+    <b-navbar-brand
+          href="https://www.pointsoftango.com"
+          target="_blank">
       <img
-        src="@/assets/UKATA.png"
-        alt="UK Tango Association"
+        src="@/assets/pots_logo_bar.png"
+        alt="Pots Logo"
         height="40"
       >
-    </b-navbar-nav>
+    </b-navbar-brand>
   </b-navbar>
 </template>
 
