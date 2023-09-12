@@ -180,6 +180,18 @@ export default {
             .includes(this.searchKeyword.toLowerCase()) ||
           item.address
             .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase()) ||
+          item.organizer
+            .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase()) ||
+          (item.keywords != null && item.keywords
+            .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase())) ||
+          item.postCode
+            .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase()) ||
+          item.address
+            .toLowerCase()
             .includes(this.searchKeyword.toLowerCase())
       )
     }
@@ -195,7 +207,7 @@ export default {
   methods: {
     viewEvents (args) {
       window.open(
-        `https://points-of-tango.web.app/events/view?country=${args.country}&region=${this.selectedRegion}&eventId=${args.id}`,
+        `https://web.pointsoftango.app/event/${args.id}?c=${args.country}&r=${this.selectedRegion}`,
         '_blank'
       )
     }

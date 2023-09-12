@@ -281,12 +281,15 @@ export default {
                 email: item.email,
                 facebook: item.facebook,
                 instagram: item.instagram,
+                link: item.link,
                 phone: item.phone
               },
+              keywords: item.keywords,
               city: item.city,
               postcode: item.postCode,
               location: item.location,
               picture: item.coverUrl,
+              logo: item.logoUrl,
               section: 'Teachers'
             })
           })

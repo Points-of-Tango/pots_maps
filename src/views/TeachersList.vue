@@ -54,8 +54,8 @@
             #cell(name)="data"
           >
             <b-img-lazy
-              v-if="data.item.picture !== undefined"
-              :src="data.item.picture"
+              v-if="data.item.logo !== undefined"
+              :src="data.item.logo"
               height="80"
               width="80"
               class="rounded-circle mr-3 img-fluid"
@@ -64,10 +64,11 @@
             {{ data.item.name }}
           </template>
           <template #cell(contact)="data">
+            <p><a :href="`${data.item.contact.link}`" :target="_blank">{{ data.item.contact.link }}</a></p>
             <p><a :href="`mailto:${data.item.contact.email}`">{{ data.item.contact.email }}</a></p>
             <p>{{ data.item.contact.phone }}</p>
             <span v-if="data.item.contact.facebook">
-              <a :href="data.item.contact.facebook">
+              <a :href="`https://facebook.com/${data.item.contact.facebook}`">
                 <img
                   width="24"
                   height="24"
@@ -77,7 +78,7 @@
               </a>
             </span>
             <span v-if="data.item.contact.instagram">
-              <a :href="data.item.contact.instagram">
+              <a :href="`https://instagram.com/${data.item.contact.instagram}`">
                 <img
                   width="24"
                   height="24"
@@ -155,6 +156,15 @@ export default {
             .toLowerCase()
             .includes(this.searchKeyword.toLowerCase()) ||
           item.contact.email
+            .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase()) ||
+          item.contact.link
+            .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase()) ||
+          item.postcode
+            .toLowerCase()
+            .includes(this.searchKeyword.toLowerCase()) ||
+          item.keywords
             .toLowerCase()
             .includes(this.searchKeyword.toLowerCase()) ||
           item.city
