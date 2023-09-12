@@ -64,11 +64,11 @@
             {{ data.item.name }}
           </template>
           <template #cell(contact)="data">
-            <p><a :href="`${data.item.contact.link}`">{{ data.item.contact.link }}</a></p>
+            <p><a :href="`${data.item.contact.link}`" :target="_blank">{{ data.item.contact.link }}</a></p>
             <p><a :href="`mailto:${data.item.contact.email}`">{{ data.item.contact.email }}</a></p>
             <p>{{ data.item.contact.phone }}</p>
             <span v-if="data.item.contact.facebook">
-              <a :href="data.item.contact.facebook">
+              <a :href="`https://facebook.com/${data.item.contact.facebook}`">
                 <img
                   width="24"
                   height="24"
@@ -78,7 +78,7 @@
               </a>
             </span>
             <span v-if="data.item.contact.instagram">
-              <a :href="data.item.contact.instagram">
+              <a :href="`https://instagram.com/${data.item.contact.instagram}`">
                 <img
                   width="24"
                   height="24"
