@@ -1,12 +1,15 @@
 <template>
   <div id="selection">
-    <h1
-      class="display-3 text-center"
-      style="color: rgba(102, 4, 4, 0.9) !important"
-    >
-      UK Tango Map
-    </h1>
-    <div
+    <div id="selction-content">
+        <div class="selction-content-text">
+            <h1
+              class="display-3 text-center text-white border-light border-3"
+            >
+              UK Tango Map
+            </h1>
+        </div>
+        <div class="selction-content-select">
+            <div
       v-if="$isMobile"
       class="is-mobile"
     >
@@ -130,7 +133,8 @@
             <b-form-select
               v-model="selectedRegion"
               :class="isMobile ? 'w-100': 'w-25'"
-              class="mx-2"
+              class="mx-2 countryClass"
+              style="width: 275px !important;"
             >
               <template #first>
                 <b-form-select-option
@@ -200,6 +204,8 @@
           </b-col>
         </b-row> -->
       </b-container>
+    </div>
+    </div>
     </div>
   </div>
 </template>

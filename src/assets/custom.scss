@@ -10,12 +10,16 @@ $secondary: #D1B4B4;
 
 #selection {
   background-color: red;
-  background-image: url('~@/assets/header-image.jpeg');
+  background-image: url('~@/assets/background-img.jpg');
   background-size: cover;
   background-position-y: center;
   object-fit: cover;
   padding: 3rem 0;
   margin-bottom: 1rem;
+  width: 1349px;
+  height: 685px;
+  position: relative;
+
 
   .is-mobile {
     .container {
@@ -59,9 +63,9 @@ $secondary: #D1B4B4;
     }
   }
 
-  .custom-select {
-    background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%3e%3cpath fill='white' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right .75rem center/8px 10px !important;
-  }
+  // .custom-select {
+  //   background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%3e%3cpath fill='white' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") no-repeat right .75rem center/8px 10px !important;
+  // }
 
   // .custom-select::after {
   //   content: "\00a0\00a0\00a0\00a0\00a0\00a0\00a0\00a0\00a0\00a0";
@@ -130,9 +134,9 @@ $secondary: #D1B4B4;
   .dropdown,
   .input-group>.form-control,
   .input-group-append {
-    background-color: $primary !important;
-    color: white !important;
-    border: 1px solid $primary !important;
+    background-color: $primary;
+    color: white;
+    border: 1px solid $primary;
     height: 100%;
   }
 
@@ -420,4 +424,29 @@ input[type="text"].multiselect__input::placeholder {
   }
 }
 
-@import 'node_modules/bootstrap/scss/bootstrap'
+@font-face {
+  font-family: 'AvenirLTStd-Roman';
+  src:url('@/assets/font/Avenir/Avenir Light/Avenir Light.ttf');
+  /* Adjust the path to match your font file's location */
+}
+
+div#selection h1 {
+  width: 400px;
+  font-size: 44px;
+  margin: 0 auto;
+  border-bottom: 4px solid #dee2e6 !important;
+  height: 65px;
+}
+div#selction-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.countryClass.countryClass {
+  background-color: #fff !important;
+  color:#000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+@import 'node_modules/bootstrap/scss/bootstrap';
