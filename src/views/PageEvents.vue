@@ -19,7 +19,6 @@
         style="color: #660404; font-style: italic"
         class="text-center"
       >
-        Please select your region.
       </h2>
       <b-tabs v-model="tabIndex">
         <b-tab

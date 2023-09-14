@@ -141,7 +141,7 @@
                   value=""
                   disabled
                 >
-                  Select region
+                  Please select a region
                 </b-form-select-option>
               </template>
               <b-form-select-option
