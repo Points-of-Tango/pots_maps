@@ -64,7 +64,7 @@
             {{ data.item.name }}
           </template>
           <template #cell(contact)="data">
-            <p><a :href="`${data.item.contact.link}`" :target="_blank">{{ data.item.contact.link }}</a></p>
+            <p><a :href="`${data.item.contact.link}`" target="blank">{{ data.item.contact.link }}</a></p>
             <p><a :href="`mailto:${data.item.contact.email}`">{{ data.item.contact.email }}</a></p>
             <p>{{ data.item.contact.phone }}</p>
             <span v-if="data.item.contact.facebook">
@@ -152,24 +152,12 @@ export default {
       return this.teachers.filter(
         (item) =>
           !this.searchKeyword ||
-          item.name
-            .toLowerCase()
-            .includes(this.searchKeyword.toLowerCase()) ||
-          item.contact.email
-            .toLowerCase()
-            .includes(this.searchKeyword.toLowerCase()) ||
-          item.contact.link
-            .toLowerCase()
-            .includes(this.searchKeyword.toLowerCase()) ||
-          item.postcode
-            .toLowerCase()
-            .includes(this.searchKeyword.toLowerCase()) ||
-          item.keywords
-            .toLowerCase()
-            .includes(this.searchKeyword.toLowerCase()) ||
-          item.city
-            .toLowerCase()
-            .includes(this.searchKeyword.toLowerCase())
+          this.isTrueThat(item.name).includes(this.searchKeyword) ||
+          this.isTrueThat(item.contact?.email).includes(this.searchKeyword) ||
+          this.isTrueThat(item.contact?.link).includes(this.searchKeyword) ||
+          this.isTrueThat(item.postcode).includes(this.searchKeyword) ||
+          this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
+          this.isTrueThat(item.city).includes(this.searchKeyword)
       )
     }
   },
@@ -184,6 +172,15 @@ export default {
   methods: {
     viewEvents (args) {
       window.open(`https://points-of-tango.web.app/events/view?country=${args.country}&region=${this.selectedRegion}&eventId=${args.id}`, '_blank')
+    },
+    isTrueThat (value) {
+      value = (value || '').toLowerCase()
+      return {
+        includes: (key) => {
+          key = (key || '').toLowerCase()
+          return key && value.includes(key)
+        }
+      }
     }
   }
 }
