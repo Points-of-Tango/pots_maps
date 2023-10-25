@@ -26,12 +26,12 @@
           lazy
         >
           <events-list
-            v-if="$route.name === 'Events' || $route.name === 'Home'"
+            v-if="$route.name === 'Events'"
             :events="events"
             :selected-region="region"
           />
           <teachers-list
-            v-else-if="$route.name === 'Teachers'"
+            v-else-if="$route.name === 'Teachers' || $route.name === 'Home'"
             :teachers="teachers"
             :selected-region="region"
           />

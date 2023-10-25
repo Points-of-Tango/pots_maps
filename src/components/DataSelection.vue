@@ -130,7 +130,7 @@ export default {
       this.$emit('updateRegion', newValue)
       this.regionIsSelected = true
       this.selectedRegion = newValue
-      if (this.$route.name === 'Events' || this.$route.name === 'Home') {
+      if (this.$route.name === 'Events') {
         this.$emit('getEvents', this.selectedRegion)
       } else {
         this.$emit('getTeachers', this.selectedRegion)

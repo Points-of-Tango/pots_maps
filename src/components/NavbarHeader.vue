@@ -9,16 +9,13 @@
                 <b-nav-item href="https://www.argentinetango.co.uk/" target="_blank" :active="$route.path === '/'">
                     Home
                 </b-nav-item>
-                <b-nav-item :to="{ name: 'Home' }" :active="$route.path === '/events'">
-                    Events
-                </b-nav-item>
-                <b-nav-item :to="{ name: 'Teachers' }" :active="$route.name === 'Teachers'">
+                <b-nav-item :to="{ name: 'Teachers' }" :active="$route.name === 'Teachers' ||  $route.name === 'Home'">
                     Teachers
                 </b-nav-item>
             </b-navbar-nav>
         </b-collapse>
         <b-navbar-brand href="https://www.pointsoftango.com" target="_blank">
-            <img src="@/assets/pots_logo_bar.png" alt="Pots Logo" height="70" width="100"
+            <img src="@/assets/pots_logo_bar.png" alt="Pots Logo" height="70" width="auto"
                 style="height: 55px;margin-right: 130px;"/>
         </b-navbar-brand>
     </b-navbar>
