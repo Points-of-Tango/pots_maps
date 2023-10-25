@@ -10,7 +10,11 @@
       @click="clickHandler">{{ name }}</h1>
     <h1 v-else
       :style="{'color': textColor}" class="name">{{ name }}</h1>
-    <p :style="{'color': textColor}" class="description"><font-awesome-icon icon="fa-solid fa-location-dot" /> {{ location }}</p>
+    <p v-for="(location, index) in locations" :key="index"
+      :style="{'color': textColor}"
+      class="description">
+      <font-awesome-icon icon="fa-solid fa-location-dot" /> {{ location.city }}<span v-if="location.postcode"> - {{ location.postcode }}</span>
+    </p>
     <span v-if="contact && contact.link" :style="{'color': textColor}" class="text-line">
       <a :href="'https://'+contact.link" target="blank">
         <font-awesome-icon icon="fa-solid fa-globe" />
@@ -44,7 +48,7 @@ export default {
     description: String,
     showFollowButton: Boolean,
     coverImageUrl: String,
-    location: String,
+    locations: Array,
     contact: Object,
     textColor: { type: String, default: 'black' }
   },
