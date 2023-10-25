@@ -1,12 +1,9 @@
 <template>
-  <b-container
+  <b-container v-if="teachers.length > 0"
     id="teachers-list"
     fluid
   >
-    <b-row
-      v-if="teachers.length > 0"
-      align-h="end"
-    >
+    <b-row align-h="end">
       <b-col
         lg="12"
         align-self="end"
@@ -23,7 +20,7 @@
               id="filter-input"
               v-model="searchKeyword"
               type="search"
-              placeholder="Type to search name, contact, city, or postcode"
+              placeholder="Type to search by name, contact, city, or postcode"
             />
             <b-input-group-append>
               <b-button
@@ -33,11 +30,20 @@
                 Clear
               </b-button>
             </b-input-group-append>
+            <b-input-group-append>
+              <b-button
+                @click="toggleResultsViewMode"
+                style="width: 40px;"
+              >
+              <font-awesome-icon v-if="!gridView" icon="fa-solid fa-grip" title="Switch to grid"/>
+              <font-awesome-icon v-else icon="fa-solid fa-table-list" title="Switch to list"/>
+              </b-button>
+            </b-input-group-append>
           </b-input-group>
         </b-form-group>
       </b-col>
     </b-row>
-    <b-row>
+    <b-row v-if="!gridView">
       <b-col>
         <b-table
           id="my-table"
@@ -103,7 +109,7 @@
         </b-table>
       </b-col>
     </b-row>
-    <b-row>
+    <b-row v-if="!gridView">
       <b-col
         sm="12"
         md="4"
@@ -112,7 +118,7 @@
       >
         <b-pagination
           v-model="currentPage"
-          :total-rows="totalRows"
+          :total-rows="this.teachers.length"
           :per-page="perPage"
           align="fill"
           size="sm"
@@ -120,10 +126,21 @@
         />
       </b-col>
     </b-row>
+    <div class="wrapper-flex" v-if="gridView">
+      <SmallProfileCard v-for="(item, index) in teachersList"
+        :key="index + item.name"
+        :name="item.name"
+        :avatar-image-url="item.logo"
+        :cover-image-url="item.picture"
+        :location="item.city + ' - ' + item.postcode"
+        :contact="item.contact"
+        ></SmallProfileCard>
+    </div>
   </b-container>
 </template>
 
 <script>
+
 export default {
   props: {
     teachers: {
@@ -136,15 +153,18 @@ export default {
       default: null
     }
   },
+  components: {
+    SmallProfileCard: () => import(/* webpackChunkName: "smallProfileCard" */ '@/components/SmallProfileCard.vue')
+  },
   data () {
     return {
       tabActive: false,
-      totalRows: 1,
       currentPage: 1,
       perPage: 25,
       fields: ['name', 'contact', 'city', 'postcode'],
       isBusy: false,
-      searchKeyword: ''
+      searchKeyword: '',
+      gridView: true
     }
   },
   computed: {
@@ -161,18 +181,10 @@ export default {
       )
     }
   },
-  watch: {
-    teachers: function (newVal, oldVal) {
-      this.totalRows = this.teachers.length
-    }
-  },
   mounted () {
     this.$root.$on('bv::dropdown::show', (bvEvent) => { })
   },
   methods: {
-    viewEvents (args) {
-      window.open(`https://points-of-tango.web.app/events/view?country=${args.country}&region=${this.selectedRegion}&eventId=${args.id}`, '_blank')
-    },
     isTrueThat (value) {
       value = (value || '').toLowerCase()
       return {
@@ -181,6 +193,9 @@ export default {
           return key && value.includes(key)
         }
       }
+    },
+    toggleResultsViewMode () {
+      this.gridView = !this.gridView
     }
   }
 }
@@ -203,6 +218,13 @@ li>a {
   &:hover {
     color: #660404;
   }
+}
+
+.wrapper-flex {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
 }
 </style>
 
