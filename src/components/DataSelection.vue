@@ -259,7 +259,7 @@ export default {
         { key: 'N_IRE', text: 'Northern Ireland' },
         { key: 'SCO', text: 'Scotland' },
         { key: 'WALES', text: 'Wales' },
-        { key: 'ONLINE', text: 'UK - Online' }
+        { key: 'ALL', text: 'All' }
       ]
     }
   },

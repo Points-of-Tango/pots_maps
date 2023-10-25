@@ -268,10 +268,13 @@ export default {
       this.isBusy = true
       this.teachers = []
 
-      await axios
-        .get(
-          `pages/GBR/PROFESSIONAL?association=true&region=${region}`
-        )
+      const params = {
+        association: 'true'
+      }
+      if (region !== 'ALL') {
+        params.region = region
+      }
+      await axios.get('pages/GBR/PROFESSIONAL', { params })
         .then((response) => {
           response.data.results.forEach((item) => {
             this.teachers.push({
@@ -328,8 +331,13 @@ export default {
       this.isBusy = true
       this.events = []
 
-      await axios
-        .get(`events/GBR/1?association=true&region=${region}`)
+      const params = {
+        association: 'true'
+      }
+      if (region !== 'ALL') {
+        params.region = region
+      }
+      await axios.get('events/GBR/1', { params })
         .then((response) => {
           response.data.results.forEach((element) => {
             const timestampStarted =
