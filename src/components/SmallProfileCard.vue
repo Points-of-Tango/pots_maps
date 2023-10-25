@@ -78,7 +78,7 @@ export default {
   background-repeat: no-repeat;
   background-size: cover;
   z-index: 0;
-  background-color: #61c6bf;
+  background-color: #660404;
 }
 
 .profile-img {
