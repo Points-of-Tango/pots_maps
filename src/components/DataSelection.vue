@@ -34,89 +34,6 @@
             </b-form-select>
           </b-col>
         </b-row>
-        <!-- <hr class="separator">
-        <b-row class="my-2">
-          <b-col
-            col
-            class="d-flex justify-content-center"
-          >
-            <multiselect
-              v-model="typeSelectedFilter"
-              :multiple="true"
-              placeholder="Select Type"
-              :options="options"
-              :disabled="!selectedRegion"
-            />
-          </b-col>
-        </b-row>
-        <b-row class="my-2">
-          <b-col
-            sm="12"
-            md="6"
-            class="d-flex justify-content-center my-2"
-          >
-            <b-form-datepicker
-              id="example-datepicker"
-              v-model="dateFromFilter"
-              reset-button
-              :min="min"
-              placeholder="Select Date"
-            />
-          </b-col>
-          <b-col
-            sm="12"
-            md="6"
-            class="d-flex justify-content-center my-2"
-          >
-            <b-input-group>
-              <b-form-input
-                v-model="cityFilter"
-                placeholder="Enter city"
-              />
-              <b-input-group-append
-                style="cursor: pointer"
-                @click="clearCityFilter"
-              >
-                <b-input-group-text>
-                  <b-icon-x />
-                </b-input-group-text>
-              </b-input-group-append>
-            </b-input-group>
-          </b-col>
-        </b-row>
-        <b-row class="my-3">
-          <b-col
-            lg="6"
-            sm="6"
-            md="6"
-            xl="auto"
-            class="d-flex justify-content-center my-2"
-          >
-            <b-button
-              style="width: 100%"
-              :disabled="!regionIsSelected"
-              variant="light"
-              @click="applyFilter()"
-            >
-              <b-icon-filter />Filter
-            </b-button>
-          </b-col>
-          <b-col
-            lg="6"
-            sm="6"
-            md="6"
-            xl="auto"
-            class="d-flex justify-content-center my-2"
-          >
-            <b-button
-              style="width: 100%"
-              variant="light"
-              @click="clearFilter()"
-            >
-              Clear Filter
-            </b-button>
-          </b-col>
-        </b-row> -->
         <hr class="separator">
       </b-container>
     </div>
@@ -154,55 +71,6 @@
             </b-form-select>
           </b-col>
         </b-row>
-        <!-- <b-row class="my-3">
-          <b-col class="d-flex justify-content-center">
-            <multiselect
-              v-model="typeSelectedFilter"
-              class="w-25 mx-2"
-              :multiple="true"
-              placeholder="Select Type"
-              :options="options"
-            />
-            <b-form-datepicker
-              id="example-datepicker"
-              v-model="dateFromFilter"
-              class="w-25 px-2"
-              reset-button
-              :min="min"
-              placeholder="Select Date"
-            />
-            <b-input-group class="w-25 px-2">
-              <b-form-input
-                v-model="cityFilter"
-                placeholder="Enter city"
-              />
-              <b-input-group-append
-                style="cursor: pointer"
-                @click="clearCityFilter"
-              >
-                <b-input-group-text>
-                  <b-icon-x />
-                </b-input-group-text>
-              </b-input-group-append>
-            </b-input-group>
-            <b-button
-              :disabled="!regionIsSelected"
-              variant="light"
-              class="mx-2"
-              @click="applyFilter()"
-            >
-              <b-icon-filter />Filter
-            </b-button>
-            <b-button
-              :disabled="!regionIsSelected"
-              variant="light"
-              class="mx-2"
-              @click="clearFilter()"
-            >
-              Clear Filter
-            </b-button>
-          </b-col>
-        </b-row> -->
       </b-container>
     </div>
     </div>
@@ -219,22 +87,13 @@ export default {
     }
   },
   data () {
-    const now = new Date()
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    )
     return {
-      min: today,
       isMobile: false,
       isTablet: false,
       regionIsSelected: false,
       selectedRegion: '',
       isBusy: false,
       typeSelectedFilter: null,
-      dateFromFilter: null,
-      cityFilter: null,
       options: [
         'MILONGA',
         'PRACTICA',
@@ -271,51 +130,20 @@ export default {
       this.$emit('updateRegion', newValue)
       this.regionIsSelected = true
       this.selectedRegion = newValue
-      this.cityFilter = null
-      this.dateFromFilter = null
-      this.typeSelectedFilter = null
-      if (
-        this.cityFilter === null ||
-        this.dateFromFilter === undefined ||
-        this.typeSelectedFilter === null
-      ) {
-        if (this.$route.name === 'Events' || this.$route.name === 'Home') {
-          this.$emit('getEvents', this.selectedRegion)
-        } else {
-          this.$emit('getTeachers', this.selectedRegion)
-        }
+      if (this.$route.name === 'Events' || this.$route.name === 'Home') {
+        this.$emit('getEvents', this.selectedRegion)
       } else {
-        this.$emit('getEventsFilter')
+        this.$emit('getTeachers', this.selectedRegion)
       }
     }
   },
   methods: {
-    applyFilter () {
-      const type = this.typeSelectedFilter
-      const daterange = this.dateFromFilter
-      const city = this.cityFilter
-
-      const obj = {
-        cityFilter: city,
-        dateFromFilter: daterange,
-        typeSelectedFilter: type,
-        selectedRegion: this.selectedRegion
-      }
-
-      this.$emit('getEventsFilter', obj)
-    },
     capitalizeWord (string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
     },
     clearFilter () {
-      this.cityFilter = null
-      this.dateFromFilter = null
-      this.typeSelectedFilter = null
       this.$emit('getEvents')
       this.$emit('removeFilterState', false)
-    },
-    clearCityFilter () {
-      this.cityFilter = null
     },
     resizeWindow () {
       if (window.innerWidth < 1024) {

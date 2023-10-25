@@ -9,7 +9,6 @@
       :is-region-selected="selectedRegion.length > 0 ? true : false"
       @getEvents="getEvents"
       @getTeachers="getTeachers"
-      @getEventsFilter="getEventsFilter"
       @updateRegion="updateRegion"
       @removeFilterState="removeFilterState"
     />
@@ -62,40 +61,15 @@ export default {
     TeachersList: () => import(/* webpackChunkName: "teachers-list" */'@/views/TeachersList.vue')
   },
   data () {
-    const now = new Date()
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    )
     return {
       tabIndex: 0,
-      min: today,
       isLoading: false,
       events: [],
       teachers: [],
       tabActive: false,
       filtered: false,
-      cityFilter: null,
-      typeSelectedFilter: null,
-      dateFromFilter: null,
       selectedRegion: '',
-      region: null,
-      sortedRegion: [
-        { key: 'ENG_E', text: 'England - East' },
-        { key: 'ENG_EML', text: 'England - East Midlands' },
-        { key: 'ENG_GLN', text: 'England - Greater London' },
-        { key: 'ENG_NE', text: 'England - North East' },
-        { key: 'ENG_NW', text: 'England - North West' },
-        { key: 'ENG_SE', text: 'England - South East' },
-        { key: 'ENG_SW', text: 'England - South West' },
-        { key: 'ENG_WML', text: 'England - West Midlands' },
-        { key: 'ENG_YH', text: 'England - Yorkshire and the Humber' },
-        { key: 'N_IRE', text: 'Northern Ireland' },
-        { key: 'SCO', text: 'Scotland' },
-        { key: 'WALES', text: 'Wales' },
-        { key: 'ONLINE', text: 'UK - Online' }
-      ]
+      region: null
     }
   },
   computed: {
@@ -149,121 +123,7 @@ export default {
     isOneWord (string) {
       return string.length > 0 && string.split('\\s+').length === 1
     },
-    getEventsFilter (evt) {
-      this.isBusy = true
-      this.events = []
 
-      const body = {
-        city: evt.cityFilter,
-        from: new Date(evt.dateFromFilter).getTime() / 1000,
-        types: evt.typeSelectedFilter
-      }
-
-      axios
-        .post(`events/filter/ukata/GBR/${this.selectedRegion}`, body)
-        .then((response) => {
-          const dateFormatOptions = {
-            month: '2-digit',
-            day: '2-digit'
-          }
-          response.data.results.forEach((element) => {
-            const timestampStarted =
-              (element.from.seconds + element.from.nanos) * 1000
-            const timestampEnded =
-              (element.to.seconds + element.to.nanos) * 1000
-
-            if (element.type === 'MILONGA_CLASS') {
-              element.type = 'Milonga & Class/Workshop'
-            }
-            if (element.type === 'PRACTICA_CLASS') {
-              element.type = 'Practica & Class/Workshop'
-            }
-            if (element.type === 'FESTIVAL_MARATHON') {
-              element.type = 'Festival / Marathon'
-            }
-            if (element.type === 'FESTIVAL_CHAMPIONSHIP') {
-              element.type = 'Festival / Championship'
-            }
-
-            if (this.isOneWord(element.type)) {
-              element.type =
-                element.type.charAt(0).toUpperCase() +
-                element.type.slice(1).toLowerCase()
-            }
-
-            // logoUrl, name, from - to, city, address & postCode, type, associationName
-            this.events.push({
-              id: element.id,
-              country: element.country,
-              cancelled: element.cancelled,
-              logo: element.logoUrl,
-              name: element.name,
-              organizer: element.associationName,
-              from: `${new Date(timestampStarted).toLocaleString(
-                'en-GB',
-                dateFormatOptions
-              )} at ${new Date(timestampStarted).toLocaleString(
-                'en-GB',
-                {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: false
-                }
-              )}`,
-              to: `${new Date(timestampEnded).toLocaleString(
-                'en-GB',
-                dateFormatOptions
-              )} at ${new Date(timestampEnded).toLocaleString(
-                'en-GB',
-                {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: false
-                }
-              )}`,
-              date: `From: ${new Date(
-                timestampStarted
-              ).toLocaleString(
-                'en-GB',
-                dateFormatOptions
-              )} at ${new Date(timestampStarted).toLocaleString(
-                'en-GB',
-                {
-                  hour: 'numeric',
-                  minute: 'numeric'
-                }
-              )} - To: ${new Date(timestampEnded).toLocaleString(
-                'en-GB',
-                dateFormatOptions
-              )} at ${new Date(timestampEnded).toLocaleString(
-                'en-GB',
-                {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true
-                }
-              )}`,
-              address: `${element.address}`,
-              type: element.type,
-              city: element.city,
-              postCode: element.postCode,
-              location: element.location,
-              keywords: element.keywords,
-              section: 'Events'
-            })
-          })
-        })
-        .catch((error) => {
-          this.events = []
-          console.error(error)
-        })
-        .finally(() => {
-          this.$root.$emit('bv::refresh::table', 'my-table')
-          this.isBusy = false
-          this.totalRows = this.events.length
-          this.filtered = true
-        })
-    },
     async getTeachers (region) {
       this.isBusy = true
       this.teachers = []
