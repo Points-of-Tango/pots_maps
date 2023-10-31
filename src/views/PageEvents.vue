@@ -153,30 +153,7 @@ export default {
               picture: item.coverUrl,
               logo: item.logoUrl,
               section: 'Teachers',
-              addresses: [
-                {
-                  city: 'London',
-                  postCode: 'N19 5QQ',
-                  location: {
-                    latitude: 51.558121,
-                    longitude: -0.1382361
-                  },
-                  country: 'GBR',
-                  region: 'ENG_GLN',
-                  continent: 'EUROPE'
-                },
-                {
-                  city: 'London',
-                  postCode: 'NW3 3BQ',
-                  location: {
-                    latitude: 51.502178,
-                    longitude: -0.1275862
-                  },
-                  country: 'GBR',
-                  region: 'ENG_GLN',
-                  continent: 'EUROPE'
-                }
-              ] // item.addresses
+              addresses: item.addresses
             })
           })
         })
