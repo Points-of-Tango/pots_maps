@@ -5,7 +5,7 @@
       ref="mapRef"
       :center="center"
       :zoom="zoomLevel"
-      style="width: 100%; height: 500px"
+      style="width: 80%; height: 700px; margin: auto;"
     >
       <gmap-marker
         v-for="(m, index) in markers"
@@ -30,7 +30,7 @@
 export default {
   name: 'GoogleMap',
   props: {
-    location: {
+    elements: {
       required: true,
       type: Array,
       default: () => []
@@ -50,32 +50,22 @@ export default {
       infoWindowPos: null,
       infoWindowOpen: false,
       center: { lat: 51.5060031, lng: -0.1003099 },
-      markers: [],
       address: [],
       currentPlace: null,
-      zoomLevel: 11
+      zoomLevel: 7
     }
   },
   watch: {
-    location: function (newVal, oldVal) {
-      this.markers = []
-      this.populateMap()
+    elements: function (newVal, oldVal) {
+      this.panToFirstMarker()
     }
   },
-  mounted () {
-    this.$refs.mapRef.$mapPromise.then((map) => {
-      this.markers = []
-      this.location.forEach((element) => {
-        if (element.location !== undefined && element.section === 'Events') {
-          map.panTo({
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          })
-          this.center = {
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          }
-          this.markers.push({
+  computed: {
+    markers: function () {
+      const markers = []
+      this.elements.forEach((element) => {
+        if (element.section === 'Events' && element.location) {
+          markers.push({
             lat: element.location.latitude,
             lng: element.location.longitude,
             name: element.name,
@@ -89,58 +79,39 @@ export default {
             city: element.city,
             section: element.section
           })
-        } else if (element.location !== undefined && element.section === 'Teachers') {
-          map.panTo({
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          })
-          this.center = {
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          }
-          this.markers.push({
-            lat: element.location.latitude,
-            lng: element.location.longitude,
-            name: element.name,
-            picture: element.picture,
-            city: element.city,
-            postcode: element.postcode,
-            section: element.section,
-            contact: element.contact
+        } else if (element.section === 'Teachers') {
+          element.addresses.forEach((address) => {
+            const marker = {
+              name: element.name,
+              picture: element.picture,
+              section: element.section,
+              contact: element.contact,
+              lat: address.location.latitude,
+              lng: address.location.longitude,
+              city: address.city,
+              postcode: address.postCode
+            }
+            markers.push(marker)
           })
         }
       })
-    })
+      return markers
+    }
+  },
+  mounted () {
+    this.panToFirstMarker()
   },
   methods: {
-    populateMap () {
+    panToFirstMarker () {
       this.$refs.mapRef.$mapPromise.then((map) => {
-        this.markers = []
-        this.location.forEach((element) => {
-          if (element.location !== undefined) {
-            map.panTo({
-              lat: element.location.latitude,
-              lng: element.location.longitude
-            })
-            this.center = {
-              lat: element.location.latitude,
-              lng: element.location.longitude
-            }
-            this.markers.push({
-              lat: element.location.latitude,
-              lng: element.location.longitude,
-              name: element.name,
-              cancelled: element.cancelled,
-              type: element.type,
-              logo: element.logo,
-              organizer: element.organizer,
-              from: element.from,
-              to: element.to,
-              address: element.address,
-              city: element.city
-            })
-          }
+        map.panTo({
+          lat: this.markers[0].lat,
+          lng: this.markers[0].lng
         })
+        this.center = {
+          lat: this.markers[0].lat,
+          lng: this.markers[0].lng
+        }
       })
     },
     toggleInfoWindow (item, index) {
@@ -177,8 +148,9 @@ export default {
             <div style="float: left;">
                 <h6 class="font-weight-bold"> ${item.name}</h6>
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="mailto:${item.contact.email}">${item.contact.email}</a></p>
+                <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${item.contact.link}">${item.contact.link}</a></p>
                 <p> ${item.contact.phone === undefined ? '' : item.contact.phone}</p>
-                <p> ${item.postcode}</p>
+                <p> ${item.postcode} </p>
             </div>
           </div>
         </div>

@@ -132,7 +132,7 @@
         :name="item.name"
         :avatar-image-url="item.logo"
         :cover-image-url="item.picture"
-        :locations="[{ city: item.city, postcode: item.postcode }]"
+        :locations="item.addresses"
         :contact="item.contact"
         ></SmallProfileCard>
     </div>

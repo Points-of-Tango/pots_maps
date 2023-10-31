@@ -41,7 +41,7 @@
           :disabled="disableView"
           lazy
         >
-          <google-map-view :location="events.length > 0 ? events : teachers" />
+          <google-map-view :elements="events.length > 0 ? events : teachers" />
         </b-tab>
       </b-tabs>
     </b-container>
@@ -152,7 +152,31 @@ export default {
               location: item.location,
               picture: item.coverUrl,
               logo: item.logoUrl,
-              section: 'Teachers'
+              section: 'Teachers',
+              addresses: [
+                {
+                  city: 'London',
+                  postCode: 'N19 5QQ',
+                  location: {
+                    latitude: 51.558121,
+                    longitude: -0.1382361
+                  },
+                  country: 'GBR',
+                  region: 'ENG_GLN',
+                  continent: 'EUROPE'
+                },
+                {
+                  city: 'London',
+                  postCode: 'NW3 3BQ',
+                  location: {
+                    latitude: 51.502178,
+                    longitude: -0.1275862
+                  },
+                  country: 'GBR',
+                  region: 'ENG_GLN',
+                  continent: 'EUROPE'
+                }
+              ] // item.addresses
             })
           })
         })
