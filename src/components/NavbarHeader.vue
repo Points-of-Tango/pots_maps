@@ -14,7 +14,7 @@
                 </b-nav-item>
             </b-navbar-nav>
         </b-collapse>
-        <b-navbar-brand href="https://www.pointsoftango.com/london" target="_blank">
+        <b-navbar-brand href="https://web.pointsoftango.app/london" target="_blank">
             <img src="@/assets/pots_logo_bar.png" alt="Pots Logo" height="70" width="auto"
                 style="height: 55px;margin-right: 130px;"/>
         </b-navbar-brand>
