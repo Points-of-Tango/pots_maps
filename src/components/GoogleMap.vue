@@ -27,6 +27,7 @@
 </template>
 
 <script>
+
 export default {
   name: 'GoogleMap',
   props: {
@@ -49,7 +50,7 @@ export default {
       currentMidx: null,
       infoWindowPos: null,
       infoWindowOpen: false,
-      center: { lat: 51.5060031, lng: -0.1003099 },
+      center: { lat: 51.5060031, lng: -50.1003099 },
       address: [],
       currentPlace: null,
       zoomLevel: 7
@@ -57,7 +58,7 @@ export default {
   },
   watch: {
     elements: function (newVal, oldVal) {
-      this.panToFirstMarker()
+      this.panToBounds()
     }
   },
   computed: {
@@ -96,22 +97,57 @@ export default {
         }
       })
       return markers
+    },
+    bounds: function () {
+      let maxLat = -90
+      let minLat = 90
+      let maxLng = -180
+      let minLng = 180
+      this.markers.forEach((m) => {
+        if (m.lat > maxLat) {
+          maxLat = m.lat
+        }
+        if (m.lat < minLat) {
+          minLat = m.lat
+        }
+        if (m.lng > maxLng) {
+          maxLng = m.lng
+        }
+        if (m.lng < minLng) {
+          minLng = m.lng
+        }
+      })
+      return {
+        sw: {
+          lat: minLat,
+          lng: minLng
+        },
+        ne: {
+          lat: maxLat,
+          lng: maxLng
+        }
+      }
     }
   },
   mounted () {
-    this.panToFirstMarker()
+    this.panToBounds()
   },
   methods: {
-    panToFirstMarker () {
+    /**
+     * Is using bounds baased on the markers.
+     * To set the bounds to GBR
+     *   sw: lat: 50.060847, lng: -5.667927
+     *   ne: lat: 56.493084, lng: 1.1675047
+     */
+    panToBounds () {
       this.$refs.mapRef.$mapPromise.then((map) => {
-        map.panTo({
-          lat: this.markers[0].lat,
-          lng: this.markers[0].lng
-        })
-        this.center = {
-          lat: this.markers[0].lat,
-          lng: this.markers[0].lng
-        }
+        // eslint-disable-next-line
+        const swPoint = new google.maps.LatLng(this.bounds.sw.lat, this.bounds.sw.lng)
+        // eslint-disable-next-line
+        const nePoint = new google.maps.LatLng(this.bounds.ne.lat, this.bounds.ne.lng)
+        // eslint-disable-next-line
+        const bounds = new google.maps.LatLngBounds(swPoint, nePoint)
+        map.fitBounds(bounds)
       })
     },
     toggleInfoWindow (item, index) {
