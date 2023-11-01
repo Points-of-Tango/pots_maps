@@ -175,9 +175,9 @@ export default {
           this.isTrueThat(item.name).includes(this.searchKeyword) ||
           this.isTrueThat(item.contact?.email).includes(this.searchKeyword) ||
           this.isTrueThat(item.contact?.link).includes(this.searchKeyword) ||
-          this.isTrueThat(item.postcode).includes(this.searchKeyword) ||
+          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.postCode], []).join(', ')).includes(this.searchKeyword) ||
           this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
-          this.isTrueThat(item.city).includes(this.searchKeyword)
+          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword)
       )
     }
   },
