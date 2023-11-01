@@ -15,8 +15,8 @@
       class="description">
       <font-awesome-icon icon="fa-solid fa-location-dot" /> {{ location.city }}<span v-if="location.postcode"> - {{ location.postcode }}</span>
     </p>
-    <span v-if="contact && contact.link" :style="{'color': textColor}" class="text-line">
-      <a :href="'https://'+contact.link" target="blank">
+    <span v-if="webpagelink" :style="{'color': textColor}" class="text-line">
+      <a :href="webpagelink" target="blank">
         <font-awesome-icon icon="fa-solid fa-globe" />
       </a>
     </span>
@@ -58,6 +58,19 @@ export default {
   methods: {
     clickHandler: () => {
       this.$router.push(`/profile/${this.profileId.value}`)
+    }
+  },
+  computed: {
+    webpagelink: function () {
+      if (this.contact && this.contact.link) {
+        if (this.contact.link.startsWith('http://') || this.contact.link.startsWith('https://')) {
+          return this.contact.link
+        } else {
+          return 'https://' + this.contact.link
+        }
+      } else {
+        return ''
+      }
     }
   }
 }
