@@ -132,7 +132,7 @@
         :name="item.name"
         :avatar-image-url="item.logo"
         :cover-image-url="item.picture"
-        :locations="item.addresses"
+        :locations="item.addresses.reduce((acc, curr) => [ ...acc, { city: curr.city, postcode: curr.postCode }], [])"
         :contact="item.contact"
         ></SmallProfileCard>
     </div>
