@@ -5,10 +5,7 @@
       :style="`background-image: url(${coverImageUrl || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'})`"></div>
     <img v-if="avatarImageUrl" :src="avatarImageUrl" alt='Profile Image' class="profile-img">
     <img v-else src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" alt="" class="profile-img">
-    <h1 v-if="profileId"
-      :style="{'color': textColor}" class="name cursor-pointer"
-      @click="clickHandler">{{ name }}</h1>
-    <h1 v-else
+    <h1
       :style="{'color': textColor}" class="name">{{ name }}</h1>
     <p v-for="(location, index) in locations" :key="index"
       :style="{'color': textColor}"
@@ -35,18 +32,15 @@
         <font-awesome-icon icon="fab fa-instagram" />
       </a>
     </span>
-    <button v-if="showFollowButton" class='btn'>Follow</button>
   </div>
 </template>
 
 <script>
 export default {
   props: {
-    profileId: String,
     avatarImageUrl: String,
     name: String,
     description: String,
-    showFollowButton: Boolean,
     coverImageUrl: String,
     locations: Array,
     contact: Object,
@@ -54,11 +48,6 @@ export default {
   },
   data () {
     return {}
-  },
-  methods: {
-    clickHandler: () => {
-      this.$router.push(`/profile/${this.profileId.value}`)
-    }
   },
   computed: {
     webpagelink: function () {
