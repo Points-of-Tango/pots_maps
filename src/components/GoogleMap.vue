@@ -5,7 +5,7 @@
       ref="mapRef"
       :center="center"
       :zoom="zoomLevel"
-      style="width: 100%; height: 500px"
+      style="width: 80%; height: 700px; margin: auto;"
     >
       <gmap-marker
         v-for="(m, index) in markers"
@@ -27,10 +27,11 @@
 </template>
 
 <script>
+
 export default {
   name: 'GoogleMap',
   props: {
-    location: {
+    elements: {
       required: true,
       type: Array,
       default: () => []
@@ -49,33 +50,23 @@ export default {
       currentMidx: null,
       infoWindowPos: null,
       infoWindowOpen: false,
-      center: { lat: 51.5060031, lng: -0.1003099 },
-      markers: [],
+      center: { lat: 51.5060031, lng: -50.1003099 },
       address: [],
       currentPlace: null,
-      zoomLevel: 11
+      zoomLevel: 7
     }
   },
   watch: {
-    location: function (newVal, oldVal) {
-      this.markers = []
-      this.populateMap()
+    elements: function (newVal, oldVal) {
+      this.panToBounds()
     }
   },
-  mounted () {
-    this.$refs.mapRef.$mapPromise.then((map) => {
-      this.markers = []
-      this.location.forEach((element) => {
-        if (element.location !== undefined && element.section === 'Events') {
-          map.panTo({
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          })
-          this.center = {
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          }
-          this.markers.push({
+  computed: {
+    markers: function () {
+      const markers = []
+      this.elements.forEach((element) => {
+        if (element.section === 'Events' && element.location) {
+          markers.push({
             lat: element.location.latitude,
             lng: element.location.longitude,
             name: element.name,
@@ -89,58 +80,74 @@ export default {
             city: element.city,
             section: element.section
           })
-        } else if (element.location !== undefined && element.section === 'Teachers') {
-          map.panTo({
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          })
-          this.center = {
-            lat: element.location.latitude,
-            lng: element.location.longitude
-          }
-          this.markers.push({
-            lat: element.location.latitude,
-            lng: element.location.longitude,
-            name: element.name,
-            picture: element.picture,
-            city: element.city,
-            postcode: element.postcode,
-            section: element.section,
-            contact: element.contact
+        } else if (element.section === 'Teachers') {
+          element.addresses.forEach((address) => {
+            const marker = {
+              name: element.name,
+              picture: element.picture,
+              section: element.section,
+              contact: element.contact,
+              lat: address.location.latitude,
+              lng: address.location.longitude,
+              city: address.city,
+              postcode: address.postCode
+            }
+            markers.push(marker)
           })
         }
       })
-    })
+      return markers
+    },
+    bounds: function () {
+      let maxLat = -90
+      let minLat = 90
+      let maxLng = -180
+      let minLng = 180
+      this.markers.forEach((m) => {
+        if (m.lat > maxLat) {
+          maxLat = m.lat
+        }
+        if (m.lat < minLat) {
+          minLat = m.lat
+        }
+        if (m.lng > maxLng) {
+          maxLng = m.lng
+        }
+        if (m.lng < minLng) {
+          minLng = m.lng
+        }
+      })
+      return {
+        sw: {
+          lat: minLat,
+          lng: minLng
+        },
+        ne: {
+          lat: maxLat,
+          lng: maxLng
+        }
+      }
+    }
+  },
+  mounted () {
+    this.panToBounds()
   },
   methods: {
-    populateMap () {
+    /**
+     * Is using bounds baased on the markers.
+     * To set the bounds to GBR
+     *   sw: lat: 50.060847, lng: -5.667927
+     *   ne: lat: 56.493084, lng: 1.1675047
+     */
+    panToBounds () {
       this.$refs.mapRef.$mapPromise.then((map) => {
-        this.markers = []
-        this.location.forEach((element) => {
-          if (element.location !== undefined) {
-            map.panTo({
-              lat: element.location.latitude,
-              lng: element.location.longitude
-            })
-            this.center = {
-              lat: element.location.latitude,
-              lng: element.location.longitude
-            }
-            this.markers.push({
-              lat: element.location.latitude,
-              lng: element.location.longitude,
-              name: element.name,
-              cancelled: element.cancelled,
-              type: element.type,
-              logo: element.logo,
-              organizer: element.organizer,
-              from: element.from,
-              to: element.to,
-              address: element.address,
-              city: element.city
-            })
-          }
-        })
+        // eslint-disable-next-line
+        const swPoint = new google.maps.LatLng(this.bounds.sw.lat, this.bounds.sw.lng)
+        // eslint-disable-next-line
+        const nePoint = new google.maps.LatLng(this.bounds.ne.lat, this.bounds.ne.lng)
+        // eslint-disable-next-line
+        const bounds = new google.maps.LatLngBounds(swPoint, nePoint)
+        map.fitBounds(bounds)
       })
     },
     toggleInfoWindow (item, index) {
@@ -177,8 +184,9 @@ export default {
             <div style="float: left;">
                 <h6 class="font-weight-bold"> ${item.name}</h6>
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="mailto:${item.contact.email}">${item.contact.email}</a></p>
+                <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${item.contact.link}">${item.contact.link}</a></p>
                 <p> ${item.contact.phone === undefined ? '' : item.contact.phone}</p>
-                <p> ${item.postcode}</p>
+                <p> ${item.postcode} </p>
             </div>
           </div>
         </div>

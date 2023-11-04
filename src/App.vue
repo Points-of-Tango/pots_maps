@@ -75,4 +75,10 @@ export default {
 .gm-style-iw-d {
   overflow: auto !important;
 }
+
+@font-face {
+  font-family: 'AvenirLTStd-Roman';
+  src: url('@/assets/font/Avenir/Avenir Light/Avenir Light.ttf');
+  /* Adjust the path to match your font file's location */
+}
 </style>
