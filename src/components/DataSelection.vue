@@ -162,6 +162,7 @@ export default {
   },
   mounted () {
     window.addEventListener('resize', this.resizeWindow)
+    this.selectedRegion = 'ALL'
   }
 }
 </script>
