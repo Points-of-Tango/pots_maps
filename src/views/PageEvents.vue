@@ -13,12 +13,6 @@
       @removeFilterState="removeFilterState"
     />
     <b-container fluid>
-      <h2
-        v-if="disableView && !filtered"
-        style="color: #660404; font-style: italic"
-        class="text-center"
-      >
-      </h2>
       <b-tabs v-model="tabIndex">
         <b-tab
           title="List View"
@@ -41,7 +35,38 @@
           :disabled="disableView"
           lazy
         >
-          <google-map-view :elements="events.length > 0 ? events : teachers" />
+        <b-row v-if="!events.length" align-h="end">
+          <b-col
+            lg="12"
+            align-self="end"
+          >
+            <b-form-group
+              label="Search"
+              label-for="filter-input"
+              label-cols-sm="3"
+              label-align-sm="right"
+              class="my-3"
+            >
+              <b-input-group>
+                <b-form-input
+                  id="filter-input"
+                  v-model="searchKeyword"
+                  type="search"
+                  placeholder="Type to search by name, contact, city, or postcode"
+                />
+                <b-input-group-append>
+                  <b-button
+                    :disabled="!searchKeyword"
+                    @click="searchKeyword = ''"
+                  >
+                    Clear
+                  </b-button>
+                </b-input-group-append>
+              </b-input-group>
+            </b-form-group>
+          </b-col>
+        </b-row>
+          <google-map-view :elements="events.length ? events : filteredTeachers" />
         </b-tab>
       </b-tabs>
     </b-container>
@@ -69,7 +94,8 @@ export default {
       tabActive: false,
       filtered: false,
       selectedRegion: '',
-      region: null
+      region: null,
+      searchKeyword: ''
     }
   },
   computed: {
@@ -78,6 +104,18 @@ export default {
         return false
       }
       return this.teachers.length <= 0
+    },
+    filteredTeachers () {
+      return this.teachers.filter(
+        (item) =>
+          !this.searchKeyword ||
+          this.isTrueThat(item.name).includes(this.searchKeyword) ||
+          this.isTrueThat(item.contact?.email).includes(this.searchKeyword) ||
+          this.isTrueThat(item.contact?.link).includes(this.searchKeyword) ||
+          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.postCode], []).join(', ')).includes(this.searchKeyword) ||
+          this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
+          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword)
+      )
     }
   },
   watch: {
@@ -114,6 +152,15 @@ export default {
     )
   },
   methods: {
+    isTrueThat (value) {
+      value = (value || '').toLowerCase()
+      return {
+        includes: (key) => {
+          key = (key || '').toLowerCase()
+          return key && value.includes(key)
+        }
+      }
+    },
     updateRegion (region) {
       this.region = region
     },
