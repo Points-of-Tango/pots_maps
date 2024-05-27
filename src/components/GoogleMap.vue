@@ -127,6 +127,19 @@ export default {
           lng: maxLng
         }
       }
+    },
+    webpagelink: function () {
+      return (item) => {
+        if (item.contact && item.contact.link) {
+          if (item.contact.link.startsWith('http://') || item.contact.link.startsWith('https://')) {
+            return item.contact.link
+          } else {
+            return 'https://' + item.contact.link
+          }
+        } else {
+          return ''
+        }
+      }
     }
   },
   mounted () {
@@ -184,7 +197,7 @@ export default {
             <div style="float: left;">
                 <h6 class="font-weight-bold"> ${item.name}</h6>
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="mailto:${item.contact.email}">${item.contact.email}</a></p>
-                <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${item.contact.link}">${item.contact.link}</a></p>
+                <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${this.webpagelink(item)}">${item.contact.link}</a></p>
                 <p> ${item.contact.phone === undefined ? '' : item.contact.phone}</p>
                 <p> ${item.postcode} </p>
             </div>

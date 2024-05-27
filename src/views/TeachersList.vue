@@ -70,7 +70,7 @@
             {{ data.item.name }}
           </template>
           <template #cell(contact)="data">
-            <p><a :href="`${data.item.contact.link}`" target="blank">{{ data.item.contact.link }}</a></p>
+            <p><a :href="`${webpagelink(data.item)}`" target="blank">{{ data.item.contact.link }}</a></p>
             <p><a :href="`mailto:${data.item.contact.email}`">{{ data.item.contact.email }}</a></p>
             <p>{{ data.item.contact.phone }}</p>
             <span v-if="data.item.contact.facebook">
@@ -179,6 +179,19 @@ export default {
           this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
           this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword)
       )
+    },
+    webpagelink: function () {
+      return (item) => {
+        if (item.contact && item.contact.link) {
+          if (item.contact.link.startsWith('http://') || item.contact.link.startsWith('https://')) {
+            return item.contact.link
+          } else {
+            return 'https://' + item.contact.link
+          }
+        } else {
+          return ''
+        }
+      }
     }
   },
   mounted () {
