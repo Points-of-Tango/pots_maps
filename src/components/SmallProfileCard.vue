@@ -12,6 +12,10 @@
       class="description">
       <font-awesome-icon icon="fa-solid fa-location-dot" /> {{ location.city }}<span v-if="location.postcode"> - {{ location.postcode }}</span>
     </p>
+    <p v-if="clubName" :style="{'color': textColor}"
+      class="club">
+      Club: {{ clubName }}
+    </p>
     <span v-if="webpagelink" :style="{'color': textColor}" class="text-line">
       <a :href="webpagelink" target="blank">
         <font-awesome-icon icon="fa-solid fa-globe" />
@@ -44,6 +48,7 @@ export default {
     coverImageUrl: String,
     locations: Array,
     contact: Object,
+    clubName: String,
     textColor: { type: String, default: 'black' }
   },
   data () {
@@ -111,6 +116,11 @@ export default {
 }
 
 .description {
+  margin: .5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.club {
   margin: .5rem 1rem;
   font-size: 0.9rem;
 }

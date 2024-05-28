@@ -200,6 +200,7 @@ export default {
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${this.webpagelink(item)}">${item.contact.link}</a></p>
                 <p> ${item.contact.phone === undefined ? '' : item.contact.phone}</p>
                 <p> ${item.postcode} </p>
+                ${item.clubName ? `<p>${item.clubName} </p>` : ''}
             </div>
           </div>
         </div>

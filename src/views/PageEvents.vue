@@ -52,7 +52,7 @@
                   id="filter-input"
                   v-model="searchKeyword"
                   type="search"
-                  placeholder="Type to search by name, contact, city, or postcode"
+                  placeholder="Type to search by name, contact, club, city, or postcode"
                 />
                 <b-input-group-append>
                   <b-button
@@ -114,7 +114,8 @@ export default {
           this.isTrueThat(item.contact?.link).includes(this.searchKeyword) ||
           this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.postCode], []).join(', ')).includes(this.searchKeyword) ||
           this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
-          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword)
+          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword) ||
+          this.isTrueThat(item.clubName).includes(this.searchKeyword)
       )
     }
   },
