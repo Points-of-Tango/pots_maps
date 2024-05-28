@@ -198,6 +198,7 @@ export default {
               city: item.city,
               postcode: item.postCode,
               location: item.location,
+              clubName: item.clubName,
               picture: item.coverUrl,
               logo: item.logoUrl,
               section: 'Teachers',
