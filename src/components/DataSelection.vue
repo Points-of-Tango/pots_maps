@@ -114,7 +114,7 @@ export default {
         { key: 'ENG_SE', text: 'England - South East' },
         { key: 'ENG_SW', text: 'England - South West' },
         { key: 'ENG_WML', text: 'England - West Midlands' },
-        { key: 'ENG_H', text: 'England - Yorkshire and the Humber' },
+        { key: 'ENG_YH', text: 'England - Yorkshire and the Humber' },
         { key: 'N_IRE', text: 'Northern Ireland' },
         { key: 'SCO', text: 'Scotland' },
         { key: 'WALES', text: 'Wales' },
