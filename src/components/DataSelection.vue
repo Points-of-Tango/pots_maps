@@ -118,7 +118,7 @@ export default {
         { key: 'N_IRE', text: 'Northern Ireland' },
         { key: 'SCO', text: 'Scotland' },
         { key: 'WALES', text: 'Wales' },
-        { key: 'ALL', text: 'All' }
+        { key: 'ALL', text: 'All Regions' }
       ]
     }
   },
