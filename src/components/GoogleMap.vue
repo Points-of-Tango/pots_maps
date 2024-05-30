@@ -13,6 +13,7 @@
         ref="marker"
         :position="m"
         :clickable="true"
+        :icon="m.icon || require('@/assets/marker-red.png')"
         @click="toggleInfoWindow(m, index)"
       />
       <gmap-info-window
@@ -81,16 +82,24 @@ export default {
             section: element.section
           })
         } else if (element.section === 'Teachers') {
+          const iconsMap = {
+            ORCHESTRA: require('@/assets/marker-yellow.png'),
+            DJ: require('@/assets/marker-blue.png'),
+            MUSICIAN: require('@/assets/marker-green.png'),
+            PROFESSIONAL: require('@/assets/marker-red.png')
+          }
           element.addresses.forEach((address) => {
             const marker = {
               name: element.name,
               picture: element.picture,
               section: element.section,
               contact: element.contact,
+              clubName: element.clubName,
               lat: address.location.latitude,
               lng: address.location.longitude,
               city: address.city,
-              postcode: address.postCode
+              postcode: address.postCode,
+              icon: iconsMap[element.type]
             }
             markers.push(marker)
           })

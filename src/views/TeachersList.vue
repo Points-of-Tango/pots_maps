@@ -148,10 +148,6 @@ export default {
       required: true,
       type: Array,
       default: () => []
-    },
-    selectedRegion: {
-      type: String,
-      default: null
     }
   },
   components: {

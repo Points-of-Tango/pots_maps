@@ -5,12 +5,9 @@
       no-wrap
     />
     <data-selection
-      :filtered="filtered"
-      :is-region-selected="selectedRegion.length > 0 ? true : false"
       @getEvents="getEvents"
       @getTeachers="getTeachers"
       @updateRegion="updateRegion"
-      @removeFilterState="removeFilterState"
     />
     <b-container fluid>
       <b-tabs v-model="tabIndex">
@@ -92,8 +89,6 @@ export default {
       events: [],
       teachers: [],
       tabActive: false,
-      filtered: false,
-      selectedRegion: '',
       region: null,
       searchKeyword: ''
     }
@@ -120,9 +115,6 @@ export default {
     }
   },
   watch: {
-    selectedRegion: function (newValue, oldValue) {
-      this.getEvents(newValue)
-    },
     '$route' () {
       this.teachers = []
       this.events = []
@@ -165,24 +157,21 @@ export default {
     updateRegion (region) {
       this.region = region
     },
-    removeFilterState (bool) {
-      this.filtered = bool
-    },
     isOneWord (string) {
       return string.length > 0 && string.split('\\s+').length === 1
     },
 
-    async getTeachers (region) {
+    async getTeachers (eventProps) {
       this.isBusy = true
       this.teachers = []
 
       const params = {
         association: 'true'
       }
-      if (region !== 'ALL') {
-        params.region = region
+      if (eventProps.region !== 'ALL') {
+        params.region = eventProps.region
       }
-      await axios.get('pages/GBR/PROFESSIONAL', { params })
+      await axios.get(`pages/GBR/${eventProps.role}`, { params })
         .then((response) => {
           response.data.results.forEach((item) => {
             this.teachers.push({
@@ -202,7 +191,8 @@ export default {
               picture: item.coverUrl,
               logo: item.logoUrl,
               section: 'Teachers',
-              addresses: item.addresses
+              addresses: item.addresses,
+              type: item.type
             })
           })
         })
