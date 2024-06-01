@@ -20,7 +20,7 @@
               id="filter-input"
               v-model="searchKeyword"
               type="search"
-              placeholder="Type to search by name, contact, city, or postcode"
+              placeholder="Type to search by name, contact, club, city, or postcode"
             />
             <b-input-group-append>
               <b-button
@@ -70,7 +70,7 @@
             {{ data.item.name }}
           </template>
           <template #cell(contact)="data">
-            <p><a :href="`${data.item.contact.link}`" target="blank">{{ data.item.contact.link }}</a></p>
+            <p><a :href="`${webpagelink(data.item)}`" target="blank">{{ data.item.contact.link }}</a></p>
             <p><a :href="`mailto:${data.item.contact.email}`">{{ data.item.contact.email }}</a></p>
             <p>{{ data.item.contact.phone }}</p>
             <span v-if="data.item.contact.facebook">
@@ -134,6 +134,7 @@
         :cover-image-url="item.picture"
         :locations="item.addresses.reduce((acc, curr) => [ ...acc, { city: curr.city, postcode: curr.postCode }], [])"
         :contact="item.contact"
+        :club="item.clubName"
         ></SmallProfileCard>
     </div>
   </b-container>
@@ -147,10 +148,6 @@ export default {
       required: true,
       type: Array,
       default: () => []
-    },
-    selectedRegion: {
-      type: String,
-      default: null
     }
   },
   components: {
@@ -177,8 +174,22 @@ export default {
           this.isTrueThat(item.contact?.link).includes(this.searchKeyword) ||
           this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.postCode], []).join(', ')).includes(this.searchKeyword) ||
           this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
-          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword)
+          this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword) ||
+          this.isTrueThat(item.clubName).includes(this.searchKeyword)
       )
+    },
+    webpagelink: function () {
+      return (item) => {
+        if (item.contact && item.contact.link) {
+          if (item.contact.link.startsWith('http://') || item.contact.link.startsWith('https://')) {
+            return item.contact.link
+          } else {
+            return 'https://' + item.contact.link
+          }
+        } else {
+          return ''
+        }
+      }
     }
   },
   mounted () {

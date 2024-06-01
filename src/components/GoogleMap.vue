@@ -13,6 +13,7 @@
         ref="marker"
         :position="m"
         :clickable="true"
+        :icon="m.icon || require('@/assets/marker-red.png')"
         @click="toggleInfoWindow(m, index)"
       />
       <gmap-info-window
@@ -81,16 +82,24 @@ export default {
             section: element.section
           })
         } else if (element.section === 'Teachers') {
+          const iconsMap = {
+            ORCHESTRA: require('@/assets/marker-yellow.png'),
+            DJ: require('@/assets/marker-blue.png'),
+            MUSICIAN: require('@/assets/marker-green.png'),
+            PROFESSIONAL: require('@/assets/marker-red.png')
+          }
           element.addresses.forEach((address) => {
             const marker = {
               name: element.name,
               picture: element.picture,
               section: element.section,
               contact: element.contact,
+              clubName: element.clubName,
               lat: address.location.latitude,
               lng: address.location.longitude,
               city: address.city,
-              postcode: address.postCode
+              postcode: address.postCode,
+              icon: iconsMap[element.type]
             }
             markers.push(marker)
           })
@@ -125,6 +134,19 @@ export default {
         ne: {
           lat: maxLat,
           lng: maxLng
+        }
+      }
+    },
+    webpagelink: function () {
+      return (item) => {
+        if (item.contact && item.contact.link) {
+          if (item.contact.link.startsWith('http://') || item.contact.link.startsWith('https://')) {
+            return item.contact.link
+          } else {
+            return 'https://' + item.contact.link
+          }
+        } else {
+          return ''
         }
       }
     }
@@ -184,9 +206,10 @@ export default {
             <div style="float: left;">
                 <h6 class="font-weight-bold"> ${item.name}</h6>
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="mailto:${item.contact.email}">${item.contact.email}</a></p>
-                <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${item.contact.link}">${item.contact.link}</a></p>
+                <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${this.webpagelink(item)}">${item.contact.link}</a></p>
                 <p> ${item.contact.phone === undefined ? '' : item.contact.phone}</p>
                 <p> ${item.postcode} </p>
+                ${item.clubName ? `<p>${item.clubName} </p>` : ''}
             </div>
           </div>
         </div>
