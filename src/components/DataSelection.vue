@@ -92,9 +92,6 @@ export default {
     }
   },
   watch: {
-    '$route' (to, from) {
-      this.selectedRegion = ''
-    },
     selectedRegion: function (newValue, oldValue) {
       this.$emit('updateRegion', newValue)
       this.selectedRegion = newValue
@@ -103,11 +100,13 @@ export default {
       } else {
         this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
       }
+      this.$router.push(`${this.$route.path}?region=${this.selectedRegion.toLowerCase()}&role=${this.selectedRole.toLowerCase()}`)
     },
     selectedRole: function (newValue, oldValue) {
       this.$emit('updateRole', newValue)
       this.selectedRole = newValue
       this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
+      this.$router.push(`${this.$route.path}?region=${this.selectedRegion.toLowerCase()}&role=${this.selectedRole.toLowerCase()}`)
     }
   },
   methods: {
@@ -127,8 +126,20 @@ export default {
   },
   mounted () {
     window.addEventListener('resize', this.resizeWindow)
-    this.selectedRegion = 'ALL'
-    this.selectedRole = 'ALL'
+    console.log('route: ', this.$route.query)
+    const query = this.$route.query
+    const availableRegionsCodes = this.sortedRegion.reduce((acc, curr) => ([...acc, curr.key.toLowerCase()]), [])
+    let defaultSelectedRegion = 'ALL'
+    if (availableRegionsCodes.includes(query.region?.toLowerCase())) {
+      defaultSelectedRegion = query.region.toUpperCase()
+    }
+    const availableRolesCodes = this.roles.reduce((acc, curr) => ([...acc, curr.key.toLowerCase()]), [])
+    let defaultSelectedRole = 'ALL'
+    if (availableRolesCodes.includes(query.role?.toLowerCase())) {
+      defaultSelectedRole = query.role.toUpperCase()
+    }
+    this.selectedRegion = defaultSelectedRegion
+    this.selectedRole = defaultSelectedRole
   }
 }
 </script>
