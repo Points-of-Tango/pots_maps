@@ -9,9 +9,6 @@
                 <b-nav-item href="https://www.argentinetango.co.uk/" target="_blank" :active="$route.path === '/'">
                     Home
                 </b-nav-item>
-                <b-nav-item :to="{ name: 'Teachers' }" :active="$route.name === 'Teachers' ||  $route.name === 'Home'">
-                    Teachers
-                </b-nav-item>
             </b-navbar-nav>
         </b-collapse>
         <b-navbar-brand href="https://web.pointsoftango.app/london" target="_blank">
