@@ -52,7 +52,7 @@
           hover
           show-empty
           :fields="fields"
-          :items="teachersList"
+          :items="sortedTeachersList"
           :current-page="currentPage"
           :per-page="perPage"
         >
@@ -127,7 +127,7 @@
       </b-col>
     </b-row>
     <div class="wrapper-flex" v-if="gridView">
-      <SmallProfileCard v-for="(item, index) in teachersList"
+      <SmallProfileCard v-for="(item, index) in sortedTeachersList"
         :key="index + item.name"
         :name="item.name"
         :avatar-image-url="item.logo"
@@ -177,6 +177,19 @@ export default {
           this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword) ||
           this.isTrueThat(item.clubName).includes(this.searchKeyword)
       )
+    },
+    sortedTeachersList () {
+      const list = this.teachersList.map((item) => ({ ...item }))
+      list.sort(function (a, b) {
+        if (a.name < b.name) {
+          return -1
+        }
+        if (a.name > b.name) {
+          return 1
+        }
+        return 0
+      })
+      return list
     },
     webpagelink: function () {
       return (item) => {
