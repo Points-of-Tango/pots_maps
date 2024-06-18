@@ -88,8 +88,8 @@ export default {
   },
   watch: {
     '$route' () {
-      this.teachers = []
-      this.events = []
+      this.teachers.length = []
+      this.events.length = []
       this.tabIndex = 0
     }
   },
@@ -143,41 +143,39 @@ export default {
       if (eventProps.region !== 'ALL') {
         params.region = eventProps.region
       }
-      await axios.get(`pages/GBR/${eventProps.role}`, { params })
-        .then((response) => {
-          console.log('Teachers: ', response.data.results.map((item) => item.name))
-          response.data.results.forEach((item) => {
-            this.teachers.push({
-              name: item.name,
-              contact: {
-                email: item.email,
-                facebook: item.facebook,
-                instagram: item.instagram,
-                link: item.link,
-                phone: item.phone
-              },
-              keywords: item.keywords,
-              city: item.city,
-              postcode: item.postCode,
-              location: item.location,
-              clubName: item.clubName,
-              picture: item.coverUrl,
-              logo: item.logoUrl,
-              section: 'Teachers',
-              addresses: item.addresses,
-              type: item.type
-            })
+      try {
+        const response = await axios.get(`pages/GBR/${eventProps.role}`, { params })
+        this.teachers.length = 0
+        response.data.results.forEach((item) => {
+          this.teachers.push({
+            id: item.id,
+            name: item.name,
+            contact: {
+              email: item.email,
+              facebook: item.facebook,
+              instagram: item.instagram,
+              link: item.link,
+              phone: item.phone
+            },
+            keywords: item.keywords,
+            city: item.city,
+            postcode: item.postCode,
+            location: item.location,
+            clubName: item.associationName,
+            picture: item.coverUrl,
+            logo: item.logoUrl,
+            section: 'Teachers',
+            addresses: item.addresses,
+            type: item.type
           })
         })
-        .catch((error) => {
-          this.teachers = []
-          console.error(error)
-        })
-        .finally(() => {
-          this.$root.$emit('bv::refresh::table', 'my-table')
-          this.isBusy = false
-          this.totalRows = this.teachers.length
-        })
+      } catch (error) {
+        this.teachers.length = 0
+        console.error(error)
+      }
+      this.$root.$emit('bv::refresh::table', 'my-table')
+      this.isBusy = false
+      this.totalRows = this.teachers.length
     },
     formatTimestampDate (timestamp) {
       const dateFormatOptions = {

@@ -12,6 +12,7 @@
               <b-col class="d-flex justify-content-center">
                 <b-form-select v-model="selectedRegion"
                   :class="isMobile ? 'w-100': 'w-25'"
+                  @change="handleSelectedRegion"
                   class="mx-2 countryClass"
                   style="width: 275px !important;"
                 >
@@ -33,6 +34,7 @@
               <b-col class="d-flex justify-content-center">
                 <b-form-select v-model="selectedRole"
                   :class="isMobile ? 'w-100': 'w-25'"
+                  @change="handleSelectedRole"
                   class="mx-2 countryClass"
                   style="width: 275px !important;"
                 >
@@ -90,24 +92,6 @@ export default {
       return this.$route.name === 'Events'
     }
   },
-  watch: {
-    selectedRegion: function (newValue, oldValue) {
-      this.$emit('updateRegion', newValue)
-      this.selectedRegion = newValue
-      if (this.isEventPage) {
-        this.$emit('getEvents', this.selectedRegion)
-      } else {
-        this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
-      }
-      this.$router.push(`${this.$route.path}?region=${this.selectedRegion.toLowerCase()}&role=${this.selectedRole.toLowerCase()}`)
-    },
-    selectedRole: function (newValue, oldValue) {
-      this.$emit('updateRole', newValue)
-      this.selectedRole = newValue
-      this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
-      this.$router.push(`${this.$route.path}?region=${this.selectedRegion.toLowerCase()}&role=${this.selectedRole.toLowerCase()}`)
-    }
-  },
   methods: {
     capitalizeWord (string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -118,6 +102,24 @@ export default {
       } else {
         this.isMobile = false
       }
+    },
+    handleSelectedRegion (region) {
+      console.log('Region Selected: ', region)
+      this.$emit('updateRegion', region)
+      this.emitUpdate()
+    },
+    handleSelectedRole (role) {
+      console.log('Role Selected: ', role)
+      this.$emit('updateRole', role)
+      this.emitUpdate()
+    },
+    emitUpdate () {
+      if (this.isEventPage) {
+        this.$emit('getEvents', this.selectedRegion)
+      } else {
+        this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
+      }
+      this.$router.push(`${this.$route.path}?region=${this.selectedRegion.toLowerCase()}&role=${this.selectedRole.toLowerCase()}`)
     }
   },
   destroyed () {
@@ -139,6 +141,7 @@ export default {
     }
     this.selectedRegion = defaultSelectedRegion
     this.selectedRole = defaultSelectedRole
+    this.emitUpdate()
   }
 }
 </script>
