@@ -5,37 +5,41 @@
       :style="`background-image: url(${coverImageUrl || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'})`"></div>
     <img v-if="avatarImageUrl" :src="avatarImageUrl" alt='Profile Image' class="profile-img">
     <img v-else src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" alt="" class="profile-img">
-    <h1
-      :style="{'color': textColor}" class="name">{{ name }}</h1>
-    <p v-for="(location, index) in locations" :key="index"
-      :style="{'color': textColor}"
-      class="description">
-      <font-awesome-icon icon="fa-solid fa-location-dot" /> {{ location.city }}<span v-if="location.postcode"> - {{ location.postcode }}</span>
-    </p>
-    <p v-if="clubName" :style="{'color': textColor}"
-      class="club">
-      Club: {{ clubName }}
-    </p>
-    <span v-if="webpagelink" :style="{'color': textColor}" class="text-line">
-      <a :href="webpagelink" target="blank">
-        <font-awesome-icon icon="fa-solid fa-globe" />
-      </a>
-    </span>
-    <span v-if="contact && contact.email" :style="{'color': textColor}" class="text-line">
-      <a :href="`mailto:${contact.email}`">
-        <font-awesome-icon icon="fa-solid fa-envelope" />
-      </a>
-    </span>
-    <span v-if="contact && contact.facebook" :style="{'color': textColor}" class="text-line">
-      <a :href="`https://facebook.com/${contact.facebook}`">
-        <font-awesome-icon icon="fab fa-facebook" />
-      </a>
-    </span>
-    <span v-if="contact && contact.instagram" :style="{'color': textColor}" class="text-line">
-      <a :href="`https://instagram.com/${contact.instagram}`">
-        <font-awesome-icon icon="fab fa-instagram" />
-      </a>
-    </span>
+    <div class="card-content">
+      <h1
+        :style="{'color': textColor}" class="name">{{ name }}</h1>
+      <p v-for="(location, index) in locations" :key="index"
+        :style="{'color': textColor}"
+        class="description">
+        <font-awesome-icon icon="fa-solid fa-location-dot" /> {{ location.city }}<span v-if="location.postcode"> - {{ location.postcode }}</span>
+      </p>
+      <p v-if="clubName" :style="{'color': textColor}"
+        class="club">
+        Club: {{ clubName }}
+      </p>
+    </div>
+    <footer class="card-footer">
+      <span v-if="webpagelink" :style="{'color': textColor}" class="text-line">
+        <a :href="webpagelink" target="blank">
+          <font-awesome-icon icon="fa-solid fa-globe" />
+        </a>
+      </span>
+      <span v-if="contact && contact.email" :style="{'color': textColor}" class="text-line">
+        <a :href="`mailto:${contact.email}`">
+          <font-awesome-icon icon="fa-solid fa-envelope" />
+        </a>
+      </span>
+      <span v-if="contact && contact.facebook" :style="{'color': textColor}" class="text-line">
+        <a :href="`https://facebook.com/${contact.facebook}`">
+          <font-awesome-icon icon="fab fa-facebook" />
+        </a>
+      </span>
+      <span v-if="contact && contact.instagram" :style="{'color': textColor}" class="text-line">
+        <a :href="`https://instagram.com/${contact.instagram}`">
+          <font-awesome-icon icon="fab fa-instagram" />
+        </a>
+      </span>
+    </footer>
   </div>
 </template>
 
@@ -129,14 +133,18 @@ export default {
   margin: .5rem .2rem;
 }
 
-.btn {
+.card-footer {
+  padding: 0.75rem 1.25rem;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-top: 1px solid rgba(0, 0, 0, 0.125);
+  position: absolute;
+  bottom: 0;
   width: 100%;
-  border: none;
-  font-size: 1rem;
-  font-weight: bold;
-  color: white;
-  padding: 1rem;
-  background-color: #46b5aa;
+  height: 3rem;
+}
+
+.card-content {
+  margin-bottom: 3rem;
 }
 
 </style>

@@ -11,59 +11,38 @@
     />
     <b-container fluid>
       <b-tabs v-model="tabIndex">
-        <b-tab
-          title="List View"
-          :active="tabActive"
-          lazy
-        >
-          <events-list
-            v-if="$route.name === 'Events'"
+        <b-tab title="Map View" lazy>
+          <b-row v-if="!events.length" align-h="end">
+            <b-col lg="12" align-self="end">
+              <b-form-group label="Search"
+                label-for="filter-input"
+                label-cols-sm="3"
+                label-align-sm="right"
+                class="my-3">
+                <b-input-group>
+                  <b-form-input id="filter-input"
+                    v-model="searchKeyword"
+                    type="search"
+                    placeholder="Type to search by name, contact, club, city, or postcode"/>
+                  <b-input-group-append>
+                    <b-button :disabled="!searchKeyword" @click="searchKeyword = ''">
+                      Clear
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+          <google-map-view :elements="events.length ? events : filteredTeachers" />
+        </b-tab>
+        <b-tab title="List View" lazy>
+          <events-list v-if="$route.name === 'Events'"
             :events="events"
-            :selected-region="region"
-          />
-          <teachers-list
-            v-else-if="$route.name === 'Teachers' || $route.name === 'Home'"
+            :selected-region="region"/>
+          <teachers-list v-else-if="$route.name === 'Teachers' || $route.name === 'Home'"
             :teachers="teachers"
             :selected-region="region"
           />
-        </b-tab>
-        <b-tab
-          title="Map View"
-          :disabled="disableView"
-          lazy
-        >
-        <b-row v-if="!events.length" align-h="end">
-          <b-col
-            lg="12"
-            align-self="end"
-          >
-            <b-form-group
-              label="Search"
-              label-for="filter-input"
-              label-cols-sm="3"
-              label-align-sm="right"
-              class="my-3"
-            >
-              <b-input-group>
-                <b-form-input
-                  id="filter-input"
-                  v-model="searchKeyword"
-                  type="search"
-                  placeholder="Type to search by name, contact, club, city, or postcode"
-                />
-                <b-input-group-append>
-                  <b-button
-                    :disabled="!searchKeyword"
-                    @click="searchKeyword = ''"
-                  >
-                    Clear
-                  </b-button>
-                </b-input-group-append>
-              </b-input-group>
-            </b-form-group>
-          </b-col>
-        </b-row>
-          <google-map-view :elements="events.length ? events : filteredTeachers" />
         </b-tab>
       </b-tabs>
     </b-container>
@@ -88,18 +67,11 @@ export default {
       isLoading: false,
       events: [],
       teachers: [],
-      tabActive: false,
       region: null,
       searchKeyword: ''
     }
   },
   computed: {
-    disableView () {
-      if (this.events.length > 0) {
-        return false
-      }
-      return this.teachers.length <= 0
-    },
     filteredTeachers () {
       return this.teachers.filter(
         (item) =>
@@ -116,8 +88,8 @@ export default {
   },
   watch: {
     '$route' () {
-      this.teachers = []
-      this.events = []
+      this.teachers.length = []
+      this.events.length = []
       this.tabIndex = 0
     }
   },
@@ -163,7 +135,7 @@ export default {
 
     async getTeachers (eventProps) {
       this.isBusy = true
-      this.teachers = []
+      this.teachers.length = 0
 
       const params = {
         association: 'true'
@@ -171,40 +143,39 @@ export default {
       if (eventProps.region !== 'ALL') {
         params.region = eventProps.region
       }
-      await axios.get(`pages/GBR/${eventProps.role}`, { params })
-        .then((response) => {
-          response.data.results.forEach((item) => {
-            this.teachers.push({
-              name: item.name,
-              contact: {
-                email: item.email,
-                facebook: item.facebook,
-                instagram: item.instagram,
-                link: item.link,
-                phone: item.phone
-              },
-              keywords: item.keywords,
-              city: item.city,
-              postcode: item.postCode,
-              location: item.location,
-              clubName: item.clubName,
-              picture: item.coverUrl,
-              logo: item.logoUrl,
-              section: 'Teachers',
-              addresses: item.addresses,
-              type: item.type
-            })
+      try {
+        const response = await axios.get(`pages/GBR/${eventProps.role}`, { params })
+        this.teachers.length = 0
+        response.data.results.forEach((item) => {
+          this.teachers.push({
+            id: item.id,
+            name: item.name,
+            contact: {
+              email: item.email,
+              facebook: item.facebook,
+              instagram: item.instagram,
+              link: item.link,
+              phone: item.phone
+            },
+            keywords: item.keywords,
+            city: item.city,
+            postcode: item.postCode,
+            location: item.location,
+            clubName: item.associationName,
+            picture: item.coverUrl,
+            logo: item.logoUrl,
+            section: 'Teachers',
+            addresses: item.addresses,
+            type: item.type
           })
         })
-        .catch((error) => {
-          this.teachers = []
-          console.error(error)
-        })
-        .finally(() => {
-          this.$root.$emit('bv::refresh::table', 'my-table')
-          this.isBusy = false
-          this.totalRows = this.teachers.length
-        })
+      } catch (error) {
+        this.teachers.length = 0
+        console.error(error)
+      }
+      this.$root.$emit('bv::refresh::table', 'my-table')
+      this.isBusy = false
+      this.totalRows = this.teachers.length
     },
     formatTimestampDate (timestamp) {
       const dateFormatOptions = {
@@ -229,7 +200,7 @@ export default {
     },
     async getEvents (region) {
       this.isBusy = true
-      this.events = []
+      this.events.length = 0
 
       const params = {
         association: 'true'
@@ -239,6 +210,7 @@ export default {
       }
       await axios.get('events/GBR/1', { params })
         .then((response) => {
+          console.log('Events: ', response.data.results.map((item) => item.name))
           response.data.results.forEach((element) => {
             const timestampStarted =
               (element.from.seconds + element.from.nanos) * 1000

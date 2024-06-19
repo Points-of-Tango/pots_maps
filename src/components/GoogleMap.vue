@@ -184,7 +184,7 @@ export default {
         <div class="card border-0 pr-4">
           <div class="card-body">
             <div style="float: left;" class="mr-3">
-              ${item.logo === undefined ? '<div/>' : `<img src=${item.logo} width="80" height="80" class="rounded-circle">`}
+              ${item.logo === undefined ? '<div style="width: 80px; height: 80px; background-color: grey;" class="rounded-circle"></div>' : `<img src=${item.logo} width="80" height="80" class="rounded-circle">`}
             </div>
             <div style="float: left;">
                 <h4 ${item.cancelled === false ? '' : 'class="cancelled text-muted"'}>${item.name}${item.cancelled === false ? '' : ' - CANCELLED'}</h4>
@@ -201,14 +201,14 @@ export default {
         <div class="card border-0 pr-4">
           <div class="card-body">
             <div style="float: left;" class="mr-3">
-              ${item.picture === undefined ? '<div/>' : `<img src=${item.picture} width="80" height="80" class="rounded-circle">`}
+              ${item.picture === undefined ? '<div style="width: 80px; height: 80px; background-color: grey;" class="rounded-circle"></div>' : `<img src=${item.picture} width="80" height="80" class="rounded-circle">`}
             </div>
             <div style="float: left;">
                 <h6 class="font-weight-bold"> ${item.name}</h6>
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="mailto:${item.contact.email}">${item.contact.email}</a></p>
                 <p class="font-weight-bold"> <a target="_blank" style="color: white; text-decoration:underline" href="${this.webpagelink(item)}">${item.contact.link}</a></p>
-                <p> ${item.contact.phone === undefined ? '' : item.contact.phone}</p>
-                <p> ${item.postcode} </p>
+                <p> 📱 ${!item.contact.phone ? '----------' : item.contact.phone}</p>
+                <p> 📪 ${item.postcode} </p>
                 ${item.clubName ? `<p>${item.clubName} </p>` : ''}
             </div>
           </div>
