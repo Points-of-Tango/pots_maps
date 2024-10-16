@@ -5,7 +5,15 @@
       ref="mapRef"
       :center="center"
       :zoom="zoomLevel"
-      style="width: 80%; height: 700px; margin: auto;"
+      :options="{
+            zoomControl: true,
+            mapTypeControl: false,
+            scaleControl: false,
+            streetViewControl: false,
+            rotateControl: false,
+            fullscreenControl: false,
+      }"
+      style="height: 700px;"
     >
       <gmap-marker
         v-for="(m, index) in markers"
@@ -86,7 +94,8 @@ export default {
             ORCHESTRA: require('@/assets/marker-yellow.png'),
             DJ: require('@/assets/marker-blue.png'),
             MUSICIAN: require('@/assets/marker-green.png'),
-            PROFESSIONAL: require('@/assets/marker-red.png')
+            PROFESSIONAL: require('@/assets/marker-red.png'),
+            ORGANISER: require('@/assets/marker-purple.png')
           }
           element.addresses.forEach((address) => {
             const marker = {
