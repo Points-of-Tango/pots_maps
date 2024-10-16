@@ -64,7 +64,8 @@ export default {
       selectedRegion: '',
       selectedRole: '',
       roles: [
-        { key: 'PROFESSIONAL', text: 'Teachers & Clubs' },
+        { key: 'PROFESSIONAL', text: 'Teachers' },
+        { key: 'ORGANISER', text: 'Tango Clubs' },
         { key: 'DJ', text: 'DJ' },
         // {key: TAXI_DANCER, text: 'Taxi Dancer'},
         { key: 'MUSICIAN', text: 'Musician' },

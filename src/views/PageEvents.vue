@@ -145,30 +145,34 @@ export default {
       }
       try {
         const response = await axios.get(`pages/GBR/${eventProps.role}`, { params })
-        this.teachers.length = 0
-        response.data.results.forEach((item) => {
-          this.teachers.push({
-            id: item.id,
-            name: item.name,
-            contact: {
-              email: item.email,
-              facebook: item.facebook,
-              instagram: item.instagram,
-              link: item.link,
-              phone: item.phone
-            },
-            keywords: item.keywords,
-            city: item.city,
-            postcode: item.postCode,
-            location: item.location,
-            clubName: item.associationName,
-            picture: item.coverUrl,
-            logo: item.logoUrl,
-            section: 'Teachers',
-            addresses: item.addresses,
-            type: item.type
+        if (response.data.responseCode === 200) {
+          this.teachers.length = 0
+          response.data.results?.forEach((item) => {
+            this.teachers.push({
+              id: item.id,
+              name: item.name,
+              contact: {
+                email: item.email,
+                facebook: item.facebook,
+                instagram: item.instagram,
+                link: item.link,
+                phone: item.phone
+              },
+              keywords: item.keywords,
+              city: item.city,
+              postcode: item.postCode,
+              location: item.location,
+              clubName: item.associationName,
+              picture: item.coverUrl,
+              logo: item.logoUrl,
+              section: 'Teachers',
+              addresses: item.addresses,
+              type: item.type
+            })
           })
-        })
+        } else {
+          throw Error(response.data.message)
+        }
       } catch (error) {
         this.teachers.length = 0
         console.error(error)
