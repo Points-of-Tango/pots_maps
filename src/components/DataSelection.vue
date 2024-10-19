@@ -12,6 +12,7 @@
               <b-col class="d-flex justify-content-center">
                 <b-form-select v-model="selectedRegion"
                   :class="isMobile ? 'w-100': 'w-25'"
+                  @change="handleSelectedRegion"
                   class="mx-2 countryClass"
                   style="width: 275px !important;"
                 >
@@ -33,6 +34,7 @@
               <b-col class="d-flex justify-content-center">
                 <b-form-select v-model="selectedRole"
                   :class="isMobile ? 'w-100': 'w-25'"
+                  @change="handleSelectedRole"
                   class="mx-2 countryClass"
                   style="width: 275px !important;"
                 >
@@ -62,8 +64,7 @@ export default {
       selectedRegion: '',
       selectedRole: '',
       roles: [
-        { key: 'ORCHESTRA', text: 'Orchestra' },
-        { key: 'PROFESSIONAL', text: 'Prefessional' },
+        { key: 'PROFESSIONAL', text: 'Teachers & Clubs' },
         { key: 'DJ', text: 'DJ' },
         // {key: TAXI_DANCER, text: 'Taxi Dancer'},
         { key: 'MUSICIAN', text: 'Musician' },
@@ -91,25 +92,6 @@ export default {
       return this.$route.name === 'Events'
     }
   },
-  watch: {
-    '$route' (to, from) {
-      this.selectedRegion = ''
-    },
-    selectedRegion: function (newValue, oldValue) {
-      this.$emit('updateRegion', newValue)
-      this.selectedRegion = newValue
-      if (this.isEventPage) {
-        this.$emit('getEvents', this.selectedRegion)
-      } else {
-        this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
-      }
-    },
-    selectedRole: function (newValue, oldValue) {
-      this.$emit('updateRole', newValue)
-      this.selectedRole = newValue
-      this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
-    }
-  },
   methods: {
     capitalizeWord (string) {
       return string.charAt(0).toUpperCase() + string.slice(1)
@@ -120,6 +102,24 @@ export default {
       } else {
         this.isMobile = false
       }
+    },
+    handleSelectedRegion (region) {
+      console.log('Region Selected: ', region)
+      this.$emit('updateRegion', region)
+      this.emitUpdate()
+    },
+    handleSelectedRole (role) {
+      console.log('Role Selected: ', role)
+      this.$emit('updateRole', role)
+      this.emitUpdate()
+    },
+    emitUpdate () {
+      if (this.isEventPage) {
+        this.$emit('getEvents', this.selectedRegion)
+      } else {
+        this.$emit('getTeachers', { region: this.selectedRegion, role: this.selectedRole })
+      }
+      this.$router.push(`${this.$route.path}?region=${this.selectedRegion.toLowerCase()}&role=${this.selectedRole.toLowerCase()}`)
     }
   },
   destroyed () {
@@ -127,8 +127,21 @@ export default {
   },
   mounted () {
     window.addEventListener('resize', this.resizeWindow)
-    this.selectedRegion = 'ALL'
-    this.selectedRole = 'ALL'
+    console.log('route: ', this.$route.query)
+    const query = this.$route.query
+    const availableRegionsCodes = this.sortedRegion.reduce((acc, curr) => ([...acc, curr.key.toLowerCase()]), [])
+    let defaultSelectedRegion = 'ALL'
+    if (availableRegionsCodes.includes(query.region?.toLowerCase())) {
+      defaultSelectedRegion = query.region.toUpperCase()
+    }
+    const availableRolesCodes = this.roles.reduce((acc, curr) => ([...acc, curr.key.toLowerCase()]), [])
+    let defaultSelectedRole = 'ALL'
+    if (availableRolesCodes.includes(query.role?.toLowerCase())) {
+      defaultSelectedRole = query.role.toUpperCase()
+    }
+    this.selectedRegion = defaultSelectedRegion
+    this.selectedRole = defaultSelectedRole
+    this.emitUpdate()
   }
 }
 </script>
