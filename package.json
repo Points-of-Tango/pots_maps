@@ -1,6 +1,6 @@
 {
   "name": "post-maps",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --openssl-legacy-provider",
