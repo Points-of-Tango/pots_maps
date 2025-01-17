@@ -65,11 +65,6 @@ export default {
       zoomLevel: 7
     }
   },
-  watch: {
-    elements: function (newVal, oldVal) {
-      this.panToBounds()
-    }
-  },
   computed: {
     markers: function () {
       const markers = []
@@ -182,12 +177,6 @@ export default {
       })
     },
     toggleInfoWindow (item, index) {
-      this.zoomLevel = 13
-      this.center = {
-        lat: item.lat,
-        lng: item.lng
-      }
-
       if (item.section === 'Events') {
         this.infoOptions.content = `
         <div class="card border-0 pr-4">
