@@ -1,5 +1,5 @@
 <template>
-  <div id="map">
+  <div id="map" class="map-container">
     <GmapMap
       id="mapId"
       ref="mapRef"
@@ -259,5 +259,17 @@ export default {
 .gm-style-iw-t {
   right: 0px;
   bottom: 55px !important;
+}
+
+.map-container {
+  width: 100%;
+  margin: auto;
+}
+
+@media only screen and (min-width: 768px) {
+  .map-container {
+    width: 80%;
+    margin: 0 auto;
+  }
 }
 </style>
