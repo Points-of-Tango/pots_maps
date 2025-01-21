@@ -182,15 +182,28 @@ export default {
      *   sw: lat: 50.060847, lng: -5.667927
      *   ne: lat: 56.493084, lng: 1.1675047
      */
+
     panToBounds () {
+      const GBR_BOUNDS = {
+        sw: { lat: 50.060847, lng: -5.667927 },
+        ne: { lat: 56.493084, lng: 1.1675047 }
+      }
+
+      const BASEDONMARKERS = false
+      let bounds = null
+      if (BASEDONMARKERS) {
+        bounds = this.bounds
+      } else {
+        bounds = GBR_BOUNDS
+      }
+
       this.$refs.mapRef.$mapPromise.then((map) => {
         // eslint-disable-next-line
-        const swPoint = new google.maps.LatLng(this.bounds.sw.lat, this.bounds.sw.lng)
+        const swPoint = new google.maps.LatLng(bounds.sw.lat, bounds.sw.lng)
         // eslint-disable-next-line
-        const nePoint = new google.maps.LatLng(this.bounds.ne.lat, this.bounds.ne.lng)
+        const nePoint = new google.maps.LatLng(bounds.ne.lat, bounds.ne.lng)
         // eslint-disable-next-line
-        const bounds = new google.maps.LatLngBounds(swPoint, nePoint)
-        map.fitBounds(bounds)
+        map.fitBounds(new google.maps.LatLngBounds(swPoint, nePoint))
       })
     },
     toggleInfoWindow (item, index) {
