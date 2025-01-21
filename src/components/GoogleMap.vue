@@ -32,6 +32,23 @@
         @closeclick="infoWindowOpen = false"
       />
     </GmapMap>
+    <div class="map-icons-index">
+      <!--<div>ORCHESTRA:
+        <img class="map-icon-image" :src="require('@/assets/marker-yellow.png')"/>
+      </div>-->
+      <div>DJ:
+        <img class="map-icon-image" :src="require('@/assets/marker-blue.png')" />
+      </div>
+      <div>Musician:
+        <img class="map-icon-image" :src="require('@/assets/marker-green.png')" />
+      </div>
+      <div>Teachers:
+        <img class="map-icon-image" :src="require('@/assets/marker-red.png')" />
+      </div>
+      <div>Tango club:
+        <img class="map-icon-image" :src="require('@/assets/marker-purple.png')" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -264,6 +281,20 @@ export default {
 .map-container {
   width: 100%;
   margin: auto;
+}
+
+.map-icons-index {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.map-icon-image {
+  height: 25px;
+  object-fit: cover;
 }
 
 @media only screen and (min-width: 768px) {
