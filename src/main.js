@@ -16,7 +16,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 /* import specific icons */
 import { faEnvelope, faGlobe, faGrip, faLocationDot, faPencil, faTableList } from '@fortawesome/free-solid-svg-icons'
-import { faFacebook, faInstagram, faWhatsapp } from '@fortawesome/free-brands-svg-icons'
+import { faFacebook, faFacebookF, faInstagram, faWhatsapp, faYoutube } from '@fortawesome/free-brands-svg-icons'
 
 Vue.use(BootstrapVue)
 Vue.component('BIconFunnel', BIconFunnel)
@@ -25,7 +25,7 @@ Vue.component('BIconFilter', BIconFilter)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 /* add icons to the library */
-library.add(faPencil, faFacebook, faInstagram, faEnvelope, faWhatsapp, faGlobe, faLocationDot, faTableList, faGrip)
+library.add(faPencil, faFacebook, faFacebookF, faInstagram, faYoutube, faEnvelope, faWhatsapp, faGlobe, faLocationDot, faTableList, faGrip)
 
 Vue.prototype.$axios = axios
 Vue.prototype.$isMobile = false

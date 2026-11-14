@@ -9,31 +9,27 @@
       @getTeachers="getTeachers"
       @updateRegion="updateRegion"
     />
-    <b-container fluid>
+    <div class="map-toolbar">
       <b-tabs v-model="tabIndex">
         <b-tab title="Map View" lazy>
-          <b-row v-if="!events.length" align-h="end">
-            <b-col lg="12" align-self="end">
-              <b-form-group label="Search"
-                label-for="filter-input"
-                label-cols-sm="3"
-                label-align-sm="right"
-                class="my-3">
-                <b-input-group>
-                  <b-form-input id="filter-input"
-                    v-model="searchKeyword"
-                    type="search"
-                    placeholder="Type to search by name, contact, club, city, or postcode"/>
-                  <b-input-group-append>
-                    <b-button :disabled="!searchKeyword" @click="searchKeyword = ''">
-                      Clear
-                    </b-button>
-                  </b-input-group-append>
-                </b-input-group>
-              </b-form-group>
-            </b-col>
-          </b-row>
-          <google-map-view :elements="events.length ? events : filteredTeachers" />
+          <div class="search-row">
+            <label for="filter-input">Search</label>
+            <input
+              id="filter-input"
+              v-model="searchKeyword"
+              type="search"
+              placeholder="Name, club, city or postcode"
+            >
+            <button
+              type="button"
+              class="btn-clear"
+              :disabled="!searchKeyword"
+              @click="searchKeyword = ''"
+            >
+              Clear
+            </button>
+          </div>
+          <google-map-view :elements="events.length ? filteredEvents : filteredTeachers" />
         </b-tab>
         <b-tab title="List View" lazy>
           <events-list v-if="$route.name === 'Events'"
@@ -45,7 +41,7 @@
           />
         </b-tab>
       </b-tabs>
-    </b-container>
+    </div>
   </div>
 </template>
 
@@ -83,6 +79,18 @@ export default {
           this.isTrueThat(item.keywords).includes(this.searchKeyword) ||
           this.isTrueThat(item.addresses.reduce((acc, curr) => [acc, curr.city], []).join(', ')).includes(this.searchKeyword) ||
           this.isTrueThat(item.clubName).includes(this.searchKeyword)
+      )
+    },
+    filteredEvents () {
+      return this.events.filter(
+        (item) =>
+          !this.searchKeyword ||
+          this.isTrueThat(item.name).includes(this.searchKeyword) ||
+          this.isTrueThat(item.city).includes(this.searchKeyword) ||
+          this.isTrueThat(item.address).includes(this.searchKeyword) ||
+          this.isTrueThat(item.organizer).includes(this.searchKeyword) ||
+          this.isTrueThat(item.postCode).includes(this.searchKeyword) ||
+          this.isTrueThat(item.type).includes(this.searchKeyword)
       )
     }
   },
@@ -294,15 +302,113 @@ td>h6 {
 }
 
 .table-hover tbody tr:hover {
-  color: #212529;
-  background-color: rgba(0, 0, 0, 0.36) !important;
+  color: #191919;
+  background-color: #F0F7F9 !important;
 }
 
-li>a {
-  color: #660404;
+.map-toolbar {
+  padding: 16px 40px 24px;
+}
 
-  &:hover {
-    color: #660404;
+.map-toolbar .nav-tabs .nav-link {
+  border: 0;
+  color: #1B82C5;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 8px 8px 0 0;
+  padding: 8px 18px;
+}
+
+.map-toolbar .nav-tabs .nav-link:hover {
+  color: #156A9F;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 0 10px;
+}
+
+.search-row label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #607980;
+}
+
+.search-row input {
+  flex: 0 0 420px;
+  width: 420px;
+  max-width: 100%;
+  height: 38px;
+  border: 1px solid #E8E6E6;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #fff;
+  color: #191919;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 13.5px;
+}
+
+.search-row input::placeholder {
+  color: #607980;
+  opacity: 1;
+}
+
+.btn-clear {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #E8E6E6;
+  border-radius: 8px;
+  background: #fff;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #585858;
+  cursor: pointer;
+}
+
+.btn-clear:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+#events-list a,
+#teachers-list a {
+  color: #1B82C5;
+}
+
+#events-list a:hover,
+#teachers-list a:hover {
+  color: #156A9F;
+}
+
+@media (max-width: 767px) {
+  .map-toolbar {
+    padding: 12px 0 0;
+  }
+
+  .map-toolbar .nav-tabs,
+  .search-row {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .search-row {
+    justify-content: stretch;
+  }
+
+  .search-row label {
+    display: none;
+  }
+
+  .search-row input {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 }
 </style>

@@ -13,17 +13,15 @@
       >
         <b-form-group
           label="Search"
-          label-for="filter-input"
-          label-cols-sm="3"
-          label-align-sm="right"
-          class="my-3"
+          label-for="events-filter-input"
+          class="results-search my-3 text-left"
         >
           <b-input-group>
             <b-form-input
-              id="filter-input"
+              id="events-filter-input"
               v-model="searchKeyword"
               type="search"
-              placeholder="Type to search name, organizer, city, keywords, or address"
+              placeholder="Name, organizer, city or address"
             />
             <b-input-group-append>
               <b-button
@@ -132,7 +130,7 @@
       >
         <b-pagination
           v-model="currentPage"
-          :total-rows="totalRows"
+          :total-rows="eventList.length"
           :per-page="perPage"
           align="fill"
           size="sm"
@@ -197,8 +195,12 @@ export default {
     }
   },
   watch: {
-    events: function (newVal, oldVal) {
+    events: function () {
       this.totalRows = this.events.length
+      this.currentPage = 1
+    },
+    searchKeyword () {
+      this.currentPage = 1
     }
   },
   mounted () {
