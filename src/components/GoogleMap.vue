@@ -6,6 +6,7 @@
         ref="mapRef"
         :center="center"
         :zoom="zoomLevel"
+        :options="mapOptions"
         style="width: 100%; height: 100%;"
       >
         <gmap-cluster
@@ -38,7 +39,8 @@
           <div><span class="swatch" style="background:#1B82C5"></span> Events</div>
         </template>
         <template v-else>
-          <div><span class="swatch" style="background:#1B82C5"></span> Teachers &amp; clubs</div>
+          <div><span class="swatch" style="background:#1B82C5"></span> Teachers</div>
+          <div><span class="swatch" style="background:#8900A0"></span> Tango club</div>
           <div><span class="swatch" style="background:#FBC020"></span> DJs</div>
           <div><span class="swatch" style="background:#234951"></span> Musicians</div>
           <div><span class="swatch" style="background:#4793A3"></span> Orchestras</div>
@@ -60,6 +62,7 @@
 
 <script>
 import GmapCluster from 'vue2-google-maps/dist/components/cluster'
+import markerPurple from '@/assets/marker-purple.png'
 
 const PIN_PATH = 'M13 34s10-9.6 10-18C23 8.6 18.6 4 13 4S3 8.6 3 16c0 8.4 10 18 10 18z'
 
@@ -70,6 +73,7 @@ function pinIcon (color) {
 
 const ICONS = {
   PROFESSIONAL: pinIcon('#1B82C5'),
+  ORGANISER: markerPurple,
   DJ: pinIcon('#FBC020'),
   MUSICIAN: pinIcon('#234951'),
   ORCHESTRA: pinIcon('#4793A3'),
@@ -78,9 +82,25 @@ const ICONS = {
 
 const ROLE_LABELS = {
   PROFESSIONAL: 'Teacher',
+  ORGANISER: 'Tango club',
   DJ: 'DJ',
   MUSICIAN: 'Musician',
   ORCHESTRA: 'Orchestra'
+}
+
+const MAP_OPTIONS = {
+  zoomControl: true,
+  mapTypeControl: false,
+  scaleControl: false,
+  streetViewControl: false,
+  rotateControl: false,
+  fullscreenControl: false
+}
+
+// Production 0.0.5 box (commit "Fix center map to england"). Named GBR there.
+const GBR_BOUNDS = {
+  sw: { lat: 50.060847, lng: -5.667927 },
+  ne: { lat: 56.493084, lng: 1.1675047 }
 }
 
 function clusterIconUrl () {
@@ -126,13 +146,13 @@ export default {
       activeItem: null,
       isMobile: false,
       center: { ...UK_CENTER },
-      zoomLevel: 6
+      zoomLevel: 6,
+      mapOptions: MAP_OPTIONS
     }
   },
   watch: {
     elements: function () {
       this.closePopup()
-      this.panToBounds()
     }
   },
   computed: {
@@ -188,22 +208,6 @@ export default {
     legendMode: function () {
       if (this.$route && this.$route.name === 'Events') return 'events'
       return 'teachers'
-    },
-    bounds: function () {
-      let maxLat = -90
-      let minLat = 90
-      let maxLng = -180
-      let minLng = 180
-      this.markers.forEach((m) => {
-        if (m.lat > maxLat) maxLat = m.lat
-        if (m.lat < minLat) minLat = m.lat
-        if (m.lng > maxLng) maxLng = m.lng
-        if (m.lng < minLng) minLng = m.lng
-      })
-      return {
-        sw: { lat: minLat, lng: minLng },
-        ne: { lat: maxLat, lng: maxLng }
-      }
     },
     webpagelink: function () {
       return (item) => {
@@ -293,38 +297,21 @@ export default {
       this.currentMidx = null
     },
     /**
-     * Fits the map to the markers. Default view is the UK;
-     * the previous centre sat in the Atlantic (lng -50) until fitBounds ran.
+     * Always frame the same Great Britain box. Marker bounds used to
+     * zoom the map onto whatever the current filter returned.
      */
     panToBounds () {
       if (!this.$refs.mapRef) return
       this.$refs.mapRef.$mapPromise.then((map) => {
-        if (!this.markers.length) {
-          this.center = { ...UK_CENTER }
-          this.zoomLevel = 6
-          map.setCenter(this.center)
-          map.setZoom(6)
-          return
-        }
         // eslint-disable-next-line
-        const swPoint = new google.maps.LatLng(this.bounds.sw.lat, this.bounds.sw.lng)
+        const swPoint = new google.maps.LatLng(GBR_BOUNDS.sw.lat, GBR_BOUNDS.sw.lng)
         // eslint-disable-next-line
-        const nePoint = new google.maps.LatLng(this.bounds.ne.lat, this.bounds.ne.lng)
+        const nePoint = new google.maps.LatLng(GBR_BOUNDS.ne.lat, GBR_BOUNDS.ne.lng)
         // eslint-disable-next-line
-        const bounds = new google.maps.LatLngBounds(swPoint, nePoint)
-        map.fitBounds(bounds, { top: 48, right: 48, bottom: 56, left: 48 })
-        // eslint-disable-next-line
-        google.maps.event.addListenerOnce(map, 'idle', () => {
-          if (map.getZoom() > 13) map.setZoom(13)
-        })
+        map.fitBounds(new google.maps.LatLngBounds(swPoint, nePoint))
       })
     },
     toggleInfoWindow (item, index) {
-      this.zoomLevel = 13
-      this.center = {
-        lat: item.lat,
-        lng: item.lng
-      }
       const sameMarker = this.currentMidx === index
       if (sameMarker && (this.infoWindowOpen || this.sheetOpen)) {
         this.closePopup()
