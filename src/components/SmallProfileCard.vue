@@ -77,12 +77,18 @@ export default {
 <style scoped>
 .card-container {
   overflow: hidden;
-  box-shadow: 0px 2px 8px 0px #333333;
+  box-shadow: 0 2px 10px rgba(25, 25, 25, 0.12);
+  border: 1px solid #E8E6E6;
   text-align: center;
   border-radius: 1rem;
   position: relative;
   width: 280px;
   padding-bottom: 1rem;
+  background: #fff;
+}
+
+.card-container:hover {
+  box-shadow: 0 8px 24px rgba(27, 130, 197, 0.18);
 }
 
 .banner-img {
@@ -93,13 +99,14 @@ export default {
   background-repeat: no-repeat;
   background-size: cover;
   z-index: 0;
-  background-color: #660404;
+  background-color: #1B82C5;
 }
 
 .profile-img {
   width: 8rem;
   margin-top: 6.5rem;
   box-shadow: 0px 2px 8px 0px #333333;
+  border: 2px solid #FBC020;
   border-radius: 50%;
   width: 80px;
   height: 80px;
@@ -133,10 +140,14 @@ export default {
   margin: .5rem .2rem;
 }
 
+.card-footer a {
+  color: #1B82C5;
+}
+
 .card-footer {
   padding: 0.75rem 1.25rem;
-  background-color: rgba(0, 0, 0, 0.03);
-  border-top: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: #F0F7F9;
+  border-top: 1px solid #E8E6E6;
   position: absolute;
   bottom: 0;
   width: 100%;

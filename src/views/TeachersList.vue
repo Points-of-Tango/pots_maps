@@ -10,17 +10,15 @@
       >
         <b-form-group
           label="Search"
-          label-for="filter-input"
-          label-cols-sm="3"
-          label-align-sm="right"
-          class="my-3"
+          label-for="teachers-filter-input"
+          class="results-search my-3 text-left"
         >
           <b-input-group>
             <b-form-input
-              id="filter-input"
+              id="teachers-filter-input"
               v-model="searchKeyword"
               type="search"
-              placeholder="Type to search by name, contact, club, city, or postcode"
+              placeholder="Name, club, city or postcode"
             />
             <b-input-group-append>
               <b-button
@@ -109,16 +107,27 @@
         </b-table>
       </b-col>
     </b-row>
-    <b-row v-if="!gridView">
+    <div class="wrapper-flex" v-if="gridView">
+      <SmallProfileCard v-for="(item, index) in pagedTeachers"
+        :key="item.id || index"
+        :name="item.name"
+        :avatar-image-url="item.logo"
+        :cover-image-url="item.picture"
+        :locations="(item.addresses || []).reduce((acc, curr) => [ ...acc, { city: curr.city, postcode: curr.postCode }], [])"
+        :contact="item.contact"
+        :club-name="item.clubName"
+        ></SmallProfileCard>
+    </div>
+    <b-row>
       <b-col
         sm="12"
         md="4"
         offset-md="4"
-        class="my-1"
+        class="my-3"
       >
         <b-pagination
           v-model="currentPage"
-          :total-rows="this.teachers.length"
+          :total-rows="sortedTeachersList.length"
           :per-page="perPage"
           align="fill"
           size="sm"
@@ -126,17 +135,6 @@
         />
       </b-col>
     </b-row>
-    <div class="wrapper-flex" v-if="gridView">
-      <SmallProfileCard v-for="(item, index) in sortedTeachersList"
-        :key="index + item.name"
-        :name="item.name"
-        :avatar-image-url="item.logo"
-        :cover-image-url="item.picture"
-        :locations="item.addresses.reduce((acc, curr) => [ ...acc, { city: curr.city, postcode: curr.postCode }], [])"
-        :contact="item.contact"
-        :club="item.clubName"
-        ></SmallProfileCard>
-    </div>
   </b-container>
 </template>
 
@@ -191,6 +189,10 @@ export default {
       })
       return list
     },
+    pagedTeachers () {
+      const start = (this.currentPage - 1) * this.perPage
+      return this.sortedTeachersList.slice(start, start + this.perPage)
+    },
     webpagelink: function () {
       return (item) => {
         if (item.contact && item.contact.link) {
@@ -203,6 +205,14 @@ export default {
           return ''
         }
       }
+    }
+  },
+  watch: {
+    searchKeyword () {
+      this.currentPage = 1
+    },
+    teachers () {
+      this.currentPage = 1
     }
   },
   mounted () {
@@ -232,16 +242,8 @@ td>h6 {
 }
 
 .table-hover tbody tr:hover {
-  color: #212529;
-  background-color: rgba(0, 0, 0, 0.36) !important;
-}
-
-li>a {
-  color: #660404;
-
-  &:hover {
-    color: #660404;
-  }
+  color: #191919;
+  background-color: #F0F7F9 !important;
 }
 
 .wrapper-flex {
