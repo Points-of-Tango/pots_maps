@@ -1,11 +1,11 @@
 {
   "name": "post-maps",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve --openssl-legacy-provider",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "serve": "node scripts/vue-cli.js serve",
+    "build": "node scripts/vue-cli.js build",
+    "lint": "node scripts/vue-cli.js lint"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.4.2",

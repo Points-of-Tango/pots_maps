@@ -6,11 +6,13 @@
         ref="mapRef"
         :center="center"
         :zoom="zoomLevel"
+        :options="mapOptions"
         style="width: 100%; height: 100%;"
       >
         <gmap-cluster
           :styles="clusterStyles"
           :zoom-on-click="true"
+          :max-zoom="12"
           :grid-size="60"
           :enable-retina-icons="true"
         >
@@ -38,10 +40,11 @@
           <div><span class="swatch" style="background:#1B82C5"></span> Events</div>
         </template>
         <template v-else>
-          <div><span class="swatch" style="background:#1B82C5"></span> Teachers &amp; clubs</div>
-          <div><span class="swatch" style="background:#FBC020"></span> DJs</div>
-          <div><span class="swatch" style="background:#234951"></span> Musicians</div>
-          <div><span class="swatch" style="background:#4793A3"></span> Orchestras</div>
+          <div><span class="swatch" :style="{ background: roleColors.PROFESSIONAL }"></span> Teachers</div>
+          <div><span class="swatch" :style="{ background: roleColors.ORGANISER }"></span> Tango club</div>
+          <div><span class="swatch" :style="{ background: roleColors.DJ }"></span> DJs</div>
+          <div><span class="swatch" :style="{ background: roleColors.MUSICIAN }"></span> Musicians</div>
+          <div><span class="swatch" :style="{ background: roleColors.ORCHESTRA }"></span> Orchestras</div>
         </template>
         <div><span class="swatch swatch--cluster"></span> Cluster</div>
       </div>
@@ -60,6 +63,7 @@
 
 <script>
 import GmapCluster from 'vue2-google-maps/dist/components/cluster'
+import markerPurple from '@/assets/marker-purple.png'
 
 const PIN_PATH = 'M13 34s10-9.6 10-18C23 8.6 18.6 4 13 4S3 8.6 3 16c0 8.4 10 18 10 18z'
 
@@ -68,19 +72,45 @@ function pinIcon (color) {
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg)
 }
 
+const ROLE_COLORS = {
+  PROFESSIONAL: '#1B82C5',
+  ORGANISER: '#8900A0',
+  DJ: '#D61F26',
+  MUSICIAN: '#234951',
+  ORCHESTRA: '#4793A3',
+  EVENT: '#1B82C5'
+}
+
 const ICONS = {
-  PROFESSIONAL: pinIcon('#1B82C5'),
-  DJ: pinIcon('#FBC020'),
-  MUSICIAN: pinIcon('#234951'),
-  ORCHESTRA: pinIcon('#4793A3'),
-  EVENT: pinIcon('#1B82C5')
+  PROFESSIONAL: pinIcon(ROLE_COLORS.PROFESSIONAL),
+  ORGANISER: markerPurple,
+  DJ: pinIcon(ROLE_COLORS.DJ),
+  MUSICIAN: pinIcon(ROLE_COLORS.MUSICIAN),
+  ORCHESTRA: pinIcon(ROLE_COLORS.ORCHESTRA),
+  EVENT: pinIcon(ROLE_COLORS.EVENT)
 }
 
 const ROLE_LABELS = {
   PROFESSIONAL: 'Teacher',
+  ORGANISER: 'Tango club',
   DJ: 'DJ',
   MUSICIAN: 'Musician',
   ORCHESTRA: 'Orchestra'
+}
+
+const MAP_OPTIONS = {
+  zoomControl: true,
+  mapTypeControl: false,
+  scaleControl: false,
+  streetViewControl: false,
+  rotateControl: false,
+  fullscreenControl: false
+}
+
+// Production 0.0.5 box (commit "Fix center map to england"). Named GBR there.
+const GBR_BOUNDS = {
+  sw: { lat: 50.060847, lng: -5.667927 },
+  ne: { lat: 56.493084, lng: 1.1675047 }
 }
 
 function clusterIconUrl () {
@@ -89,6 +119,74 @@ function clusterIconUrl () {
 }
 
 const UK_CENTER = { lat: 54.5, lng: -3.5 }
+
+// Clustering ends at zoom 12, so from 13 every pin is drawn. Pins that share
+// a coordinate would still sit on one pixel; spread those onto a ring whose
+// radius stays a constant number of pixels as the zoom changes.
+const SPIDER_FROM_ZOOM = 13
+const SPIDER_GAP_PX = 48
+const SPIDER_OVERLAP_PX = 34
+
+function metersBetween (a, b) {
+  const lat1 = a.sourceLat * Math.PI / 180
+  const lat2 = b.sourceLat * Math.PI / 180
+  const north = (b.sourceLat - a.sourceLat) * 111320
+  const east = (b.sourceLng - a.sourceLng) * 111320 * Math.cos((lat1 + lat2) / 2)
+  return Math.hypot(north, east)
+}
+
+function spiderLatLng (lat, lng, index, count, zoom) {
+  if (count < 2 || zoom < SPIDER_FROM_ZOOM) {
+    return { lat, lng }
+  }
+  const radiusPx = SPIDER_GAP_PX / (2 * Math.sin(Math.PI / count))
+  const angle = (2 * Math.PI * index) / count - Math.PI / 2
+  const latRad = lat * Math.PI / 180
+  const metersPerPx = 156543.03392 * Math.cos(latRad) / Math.pow(2, zoom)
+  const east = Math.cos(angle) * radiusPx * metersPerPx
+  const north = Math.sin(angle) * radiusPx * metersPerPx
+  return {
+    lat: lat + north / 111320,
+    lng: lng + east / (111320 * Math.cos(latRad))
+  }
+}
+
+function overlapMeters (lat, zoom) {
+  const metersPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)
+  return SPIDER_OVERLAP_PX * metersPerPx
+}
+
+function spreadSharedPins (markers, zoom) {
+  markers.forEach((marker) => {
+    marker.lat = marker.sourceLat
+    marker.lng = marker.sourceLng
+  })
+  if (zoom < SPIDER_FROM_ZOOM) return markers
+  const pending = markers.slice()
+  while (pending.length) {
+    const seed = pending.shift()
+    const group = [seed]
+    const limit = overlapMeters(seed.sourceLat, zoom)
+    for (let i = 0; i < pending.length;) {
+      if (metersBetween(seed, pending[i]) <= limit) {
+        group.push(pending.splice(i, 1)[0])
+      } else {
+        i += 1
+      }
+    }
+    group.sort((a, b) => {
+      return String(a.name).localeCompare(String(b.name)) || String(a.key).localeCompare(String(b.key))
+    })
+    const centerLat = group.reduce((sum, marker) => sum + marker.sourceLat, 0) / group.length
+    const centerLng = group.reduce((sum, marker) => sum + marker.sourceLng, 0) / group.length
+    group.forEach((marker, slot) => {
+      const pos = spiderLatLng(centerLat, centerLng, slot, group.length, zoom)
+      marker.lat = pos.lat
+      marker.lng = pos.lng
+    })
+  }
+  return markers
+}
 
 export default {
   name: 'GoogleMap',
@@ -126,13 +224,18 @@ export default {
       activeItem: null,
       isMobile: false,
       center: { ...UK_CENTER },
-      zoomLevel: 6
+      zoomLevel: 6,
+      spiderZoom: 6,
+      mapOptions: MAP_OPTIONS,
+      roleColors: ROLE_COLORS
     }
   },
   watch: {
     elements: function () {
       this.closePopup()
-      this.panToBounds()
+    },
+    spiderZoom: function () {
+      this.syncOpenCardPosition()
     }
   },
   computed: {
@@ -145,6 +248,8 @@ export default {
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
           markers.push({
             key: `event-${element.id}-${lat}-${lng}`,
+            sourceLat: lat,
+            sourceLng: lng,
             lat,
             lng,
             name: element.name,
@@ -167,6 +272,8 @@ export default {
             if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
             markers.push({
               key: `teacher-${element.id}-${addressIndex}-${lat}-${lng}`,
+              sourceLat: lat,
+              sourceLng: lng,
               name: element.name,
               picture: element.picture,
               logo: element.logo,
@@ -183,27 +290,11 @@ export default {
           })
         }
       })
-      return markers
+      return spreadSharedPins(markers, this.spiderZoom)
     },
     legendMode: function () {
       if (this.$route && this.$route.name === 'Events') return 'events'
       return 'teachers'
-    },
-    bounds: function () {
-      let maxLat = -90
-      let minLat = 90
-      let maxLng = -180
-      let minLng = 180
-      this.markers.forEach((m) => {
-        if (m.lat > maxLat) maxLat = m.lat
-        if (m.lat < minLat) minLat = m.lat
-        if (m.lng > maxLng) maxLng = m.lng
-        if (m.lng < minLng) minLng = m.lng
-      })
-      return {
-        sw: { lat: minLat, lng: minLng },
-        ne: { lat: maxLat, lng: maxLng }
-      }
     },
     webpagelink: function () {
       return (item) => {
@@ -223,9 +314,11 @@ export default {
     this.updateViewport()
     window.addEventListener('resize', this.updateViewport)
     this.panToBounds()
+    this.watchMapZoom()
   },
   destroyed () {
     window.removeEventListener('resize', this.updateViewport)
+    this.clearZoomListener()
   },
   methods: {
     updateViewport () {
@@ -293,38 +386,59 @@ export default {
       this.currentMidx = null
     },
     /**
-     * Fits the map to the markers. Default view is the UK;
-     * the previous centre sat in the Atlantic (lng -50) until fitBounds ran.
+     * Always frame the same Great Britain box. Marker bounds used to
+     * zoom the map onto whatever the current filter returned.
      */
     panToBounds () {
       if (!this.$refs.mapRef) return
       this.$refs.mapRef.$mapPromise.then((map) => {
-        if (!this.markers.length) {
-          this.center = { ...UK_CENTER }
-          this.zoomLevel = 6
-          map.setCenter(this.center)
-          map.setZoom(6)
-          return
-        }
         // eslint-disable-next-line
-        const swPoint = new google.maps.LatLng(this.bounds.sw.lat, this.bounds.sw.lng)
+        const swPoint = new google.maps.LatLng(GBR_BOUNDS.sw.lat, GBR_BOUNDS.sw.lng)
         // eslint-disable-next-line
-        const nePoint = new google.maps.LatLng(this.bounds.ne.lat, this.bounds.ne.lng)
+        const nePoint = new google.maps.LatLng(GBR_BOUNDS.ne.lat, GBR_BOUNDS.ne.lng)
         // eslint-disable-next-line
-        const bounds = new google.maps.LatLngBounds(swPoint, nePoint)
-        map.fitBounds(bounds, { top: 48, right: 48, bottom: 56, left: 48 })
+        map.fitBounds(new google.maps.LatLngBounds(swPoint, nePoint))
+      })
+    },
+    watchMapZoom () {
+      if (!this.$refs.mapRef) return
+      this.$refs.mapRef.$mapPromise.then((map) => {
+        this.spiderZoom = map.getZoom()
+        this.clearZoomListener()
         // eslint-disable-next-line
-        google.maps.event.addListenerOnce(map, 'idle', () => {
-          if (map.getZoom() > 13) map.setZoom(13)
+        this._zoomListener = google.maps.event.addListener(map, 'zoom_changed', () => {
+          const zoom = map.getZoom()
+          clearTimeout(this._spiderTimer)
+          this._spiderTimer = setTimeout(() => {
+            const wasSpread = this.spiderZoom >= SPIDER_FROM_ZOOM
+            const spreadNow = zoom >= SPIDER_FROM_ZOOM
+            if (!wasSpread && !spreadNow) return
+            if (zoom !== this.spiderZoom) this.spiderZoom = zoom
+          }, 80)
         })
       })
     },
-    toggleInfoWindow (item, index) {
-      this.zoomLevel = 13
-      this.center = {
-        lat: item.lat,
-        lng: item.lng
+    clearZoomListener () {
+      clearTimeout(this._spiderTimer)
+      if (!this._zoomListener) return
+      // eslint-disable-next-line
+      google.maps.event.removeListener(this._zoomListener)
+      this._zoomListener = null
+    },
+    syncOpenCardPosition () {
+      if (!this.activeItem) return
+      const marker = this.markers.find((item) => item.key === this.activeItem.key)
+      if (!marker) return
+      this.activeItem = marker
+      this.infoWindowPos = { lat: marker.lat, lng: marker.lng }
+      if (!this.isMobile && this.infoWindowOpen) {
+        this.infoOptions = {
+          ...this.infoOptions,
+          content: this.popupMarkup(marker)
+        }
       }
+    },
+    toggleInfoWindow (item, index) {
       const sameMarker = this.currentMidx === index
       if (sameMarker && (this.infoWindowOpen || this.sheetOpen)) {
         this.closePopup()
