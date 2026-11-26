@@ -41,6 +41,23 @@
         </b-form-group>
       </b-col>
     </b-row>
+    <b-row>
+      <b-col
+        sm="12"
+        md="4"
+        offset-md="4"
+        class="my-3"
+      >
+        <b-pagination
+          v-model="currentPage"
+          :total-rows="sortedTeachersList.length"
+          :per-page="perPage"
+          align="fill"
+          size="sm"
+          class="my-0"
+        />
+      </b-col>
+    </b-row>
     <b-row v-if="!gridView">
       <b-col>
         <b-table
@@ -131,23 +148,6 @@
         :club-name="item.clubName"
         ></SmallProfileCard>
     </div>
-    <b-row>
-      <b-col
-        sm="12"
-        md="4"
-        offset-md="4"
-        class="my-3"
-      >
-        <b-pagination
-          v-model="currentPage"
-          :total-rows="sortedTeachersList.length"
-          :per-page="perPage"
-          align="fill"
-          size="sm"
-          class="my-0"
-        />
-      </b-col>
-    </b-row>
   </b-container>
 </template>
 
@@ -230,6 +230,14 @@ export default {
     },
     teachers () {
       this.currentPage = 1
+    },
+    currentPage () {
+      this.$nextTick(() => {
+        const el = this.$el
+        if (el && el.scrollIntoView) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
     }
   },
   mounted () {
