@@ -158,6 +158,7 @@ export default {
           response.data.results?.forEach((item) => {
             this.teachers.push({
               id: item.id,
+              slug: item.slug,
               name: item.name,
               contact: {
                 email: item.email,
@@ -175,7 +176,9 @@ export default {
               logo: item.logoUrl,
               section: 'Teachers',
               addresses: item.addresses,
-              type: item.type
+              type: item.type,
+              types: item.types,
+              categories: item.categories
             })
           })
         } else {

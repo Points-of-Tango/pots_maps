@@ -8,6 +8,7 @@
         :zoom="zoomLevel"
         :options="mapOptions"
         style="width: 100%; height: 100%;"
+        @click="closePopup"
       >
         <gmap-cluster
           :styles="clusterStyles"
@@ -17,15 +18,25 @@
           :enable-retina-icons="true"
         >
           <gmap-marker
-            v-for="(m, index) in markers"
+            v-for="m in clusterMarkers"
             :key="m.key"
-            ref="marker"
             :position="m"
             :clickable="true"
             :icon="m.icon"
-            @click="toggleInfoWindow(m, index)"
+            :title="m.title"
+            @click="onMarkerClick(m)"
           />
         </gmap-cluster>
+        <!-- Real pins of expanded / auto-separated pages live outside the geographic clusterer -->
+        <gmap-marker
+          v-for="m in freeMarkers"
+          :key="m.key"
+          :position="m"
+          :clickable="true"
+          :icon="m.icon"
+          :title="m.title"
+          @click="onMarkerClick(m)"
+        />
         <gmap-info-window
           v-if="!isMobile"
           ref="infoWindow"
@@ -37,7 +48,7 @@
       </GmapMap>
       <div class="map-legend" aria-hidden="true">
         <template v-if="legendMode === 'events'">
-          <div><span class="swatch" style="background:#1B82C5"></span> Events</div>
+          <div><span class="swatch" :style="{ background: roleColors.EVENT }"></span> Events</div>
         </template>
         <template v-else>
           <div><span class="swatch" :style="{ background: roleColors.PROFESSIONAL }"></span> Teachers</div>
@@ -46,7 +57,8 @@
           <div><span class="swatch" :style="{ background: roleColors.MUSICIAN }"></span> Musicians</div>
           <div><span class="swatch" :style="{ background: roleColors.ORCHESTRA }"></span> Orchestras</div>
         </template>
-        <div><span class="swatch swatch--cluster"></span> Cluster</div>
+        <div v-if="legendMode !== 'events'"><span class="swatch swatch--page"></span> Page, several addresses</div>
+        <div><span class="swatch swatch--cluster"></span> Nearby places</div>
       </div>
       <div
         v-if="isMobile && sheetOpen && activeItem"
@@ -63,40 +75,26 @@
 
 <script>
 import GmapCluster from 'vue2-google-maps/dist/components/cluster'
-import markerPurple from '@/assets/marker-purple.png'
-
-const PIN_PATH = 'M13 34s10-9.6 10-18C23 8.6 18.6 4 13 4S3 8.6 3 16c0 8.4 10 18 10 18z'
-
-function pinIcon (color) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="36" viewBox="0 0 26 36"><path d="${PIN_PATH}" fill="${color}" stroke="#ffffff" stroke-width="1.6"/><circle cx="13" cy="15" r="4.2" fill="#ffffff"/></svg>`
-  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg)
-}
-
-const ROLE_COLORS = {
-  PROFESSIONAL: '#1B82C5',
-  ORGANISER: '#8900A0',
-  DJ: '#D61F26',
-  MUSICIAN: '#234951',
-  ORCHESTRA: '#4793A3',
-  EVENT: '#1B82C5'
-}
+import {
+  ROLE_COLORS, ROLE_LABELS, normalizeRoles, primaryRole, roleColors,
+  roleChipsHtml, topBarBackground, escapeHtml
+} from '@/utils/roles'
+import { pagePoints, centroid, isSeparated } from '@/utils/pageClusters'
+import { pinIcon, multiRolePinIcon, pageClusterIcon, geoClusterIcon, CLUSTER_ICON_SIZE } from '@/utils/pageIcons'
+import { profileUrl } from '@/utils/profileUrl'
+import { loadImageDataUrl } from '@/utils/imageDataUrl'
 
 const ICONS = {
   PROFESSIONAL: pinIcon(ROLE_COLORS.PROFESSIONAL),
-  ORGANISER: markerPurple,
+  ORGANISER: pinIcon(ROLE_COLORS.ORGANISER),
   DJ: pinIcon(ROLE_COLORS.DJ),
   MUSICIAN: pinIcon(ROLE_COLORS.MUSICIAN),
   ORCHESTRA: pinIcon(ROLE_COLORS.ORCHESTRA),
   EVENT: pinIcon(ROLE_COLORS.EVENT)
 }
 
-const ROLE_LABELS = {
-  PROFESSIONAL: 'Teacher',
-  ORGANISER: 'Tango club',
-  DJ: 'DJ',
-  MUSICIAN: 'Musician',
-  ORCHESTRA: 'Orchestra'
-}
+// "open outside" icon (FontAwesome 6 up-right-from-square) for the popup HTML string
+const OPEN_ICON_SVG = '<svg class="ukata-open-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12" aria-hidden="true" focusable="false"><path fill="currentColor" d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></svg>'
 
 const MAP_OPTIONS = {
   zoomControl: true,
@@ -113,11 +111,6 @@ const GBR_BOUNDS = {
   ne: { lat: 56.493084, lng: 1.1675047 }
 }
 
-function clusterIconUrl () {
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#1B82C5" stroke="#ffffff" stroke-width="2"/></svg>'
-  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg)
-}
-
 const UK_CENTER = { lat: 54.5, lng: -3.5 }
 
 // Clustering ends at zoom 12, so from 13 every pin is drawn. Pins that share
@@ -126,6 +119,8 @@ const UK_CENTER = { lat: 54.5, lng: -3.5 }
 const SPIDER_FROM_ZOOM = 13
 const SPIDER_GAP_PX = 48
 const SPIDER_OVERLAP_PX = 34
+// Zoom cap when a page cluster is expanded onto (almost) one spot
+const MAX_EXPAND_ZOOM = 16
 
 function metersBetween (a, b) {
   const lat1 = a.sourceLat * Math.PI / 180
@@ -188,6 +183,17 @@ function spreadSharedPins (markers, zoom) {
   return markers
 }
 
+// Memoised so a zoom tick does not rebuild identical data URLs.
+const iconCache = new Map()
+function cached (key, build) {
+  if (!iconCache.has(key)) iconCache.set(key, build())
+  return iconCache.get(key)
+}
+
+function placeText (point) {
+  return [point.city, point.postcode].filter(Boolean).join(' · ')
+}
+
 export default {
   name: 'GoogleMap',
   components: { GmapCluster },
@@ -209,7 +215,7 @@ export default {
         }
       },
       clusterStyles: [{
-        url: clusterIconUrl(),
+        url: geoClusterIcon(),
         width: 40,
         height: 40,
         textColor: '#ffffff',
@@ -217,7 +223,7 @@ export default {
         fontWeight: '700',
         fontFamily: 'Open Sans, sans-serif'
       }],
-      currentMidx: null,
+      currentKey: null,
       infoWindowPos: null,
       infoWindowOpen: false,
       sheetOpen: false,
@@ -226,6 +232,13 @@ export default {
       center: { ...UK_CENTER },
       zoomLevel: 6,
       spiderZoom: 6,
+      mapZoom: 6,
+      // pageId -> true for multi-address pages whose addresses no longer overlap
+      separated: {},
+      // page opened by clicking its page cluster (only one at a time)
+      expandedPageId: null,
+      // logo/picture url -> small data: URL, filled asynchronously
+      pageImages: {},
       mapOptions: MAP_OPTIONS,
       roleColors: ROLE_COLORS
     }
@@ -233,64 +246,127 @@ export default {
   watch: {
     elements: function () {
       this.closePopup()
+      this.recomputeSeparation(this.mapZoom)
+      this.loadPageImages()
     },
     spiderZoom: function () {
       this.syncOpenCardPosition()
     }
   },
   computed: {
-    markers: function () {
-      const markers = []
+    // One model per page, independent from the zoom.
+    pageModels: function () {
+      const models = []
       this.elements.forEach((element) => {
-        if (element.section === 'Events' && element.location) {
-          const lat = Number(element.location.latitude)
-          const lng = Number(element.location.longitude)
-          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
-          markers.push({
-            key: `event-${element.id}-${lat}-${lng}`,
-            sourceLat: lat,
-            sourceLng: lng,
-            lat,
-            lng,
-            name: element.name,
-            cancelled: element.cancelled,
-            type: element.type,
-            logo: element.logo,
-            organizer: element.organizer,
-            from: element.from,
-            to: element.to,
-            address: element.address,
-            city: element.city,
-            section: element.section,
-            icon: ICONS.EVENT
-          })
-        } else if (element.section === 'Teachers') {
-          (element.addresses || []).forEach((address, addressIndex) => {
-            if (!address || !address.location) return
-            const lat = Number(address.location.latitude)
-            const lng = Number(address.location.longitude)
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
-            markers.push({
-              key: `teacher-${element.id}-${addressIndex}-${lat}-${lng}`,
-              sourceLat: lat,
-              sourceLng: lng,
-              name: element.name,
-              picture: element.picture,
-              logo: element.logo,
-              section: element.section,
-              contact: element.contact,
-              clubName: element.clubName,
-              type: element.type,
-              lat,
-              lng,
-              city: address.city,
-              postcode: address.postCode,
-              icon: ICONS[element.type] || ICONS.PROFESSIONAL
-            })
-          })
-        }
+        if (element.section !== 'Teachers') return
+        const points = pagePoints(element.addresses)
+        if (!points.length) return
+        const roles = normalizeRoles(element)
+        models.push({ element, points, roles, colors: roleColors(roles) })
       })
-      return spreadSharedPins(markers, this.spiderZoom)
+      return models
+    },
+    layout: function () {
+      const clustered = []
+      const free = []
+      this.elements.forEach((element) => {
+        if (element.section !== 'Events' || !element.location) return
+        const lat = Number(element.location.latitude)
+        const lng = Number(element.location.longitude)
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+        clustered.push({
+          key: `event-${element.id}-${lat}-${lng}`,
+          sourceLat: lat,
+          sourceLng: lng,
+          lat,
+          lng,
+          name: element.name,
+          title: element.name,
+          cancelled: element.cancelled,
+          type: element.type,
+          logo: element.logo,
+          organizer: element.organizer,
+          from: element.from,
+          to: element.to,
+          address: element.address,
+          city: element.city,
+          section: element.section,
+          icon: ICONS.EVENT
+        })
+      })
+      this.pageModels.forEach((model) => {
+        const { element, points, roles, colors } = model
+        const common = {
+          pageId: element.id,
+          slug: element.slug,
+          name: element.name,
+          title: element.name,
+          picture: element.picture,
+          logo: element.logo,
+          section: element.section,
+          contact: element.contact,
+          clubName: element.clubName,
+          type: element.type,
+          types: element.types,
+          categories: element.categories,
+          roles,
+          addressCount: points.length
+        }
+        const pinIconUrl = roles.length > 1
+          ? cached('multi:' + colors.join(','), () => multiRolePinIcon(colors))
+          : ICONS[primaryRole(element.type)]
+        const expanded = points.length > 1 && (this.expandedPageId === element.id || this.separated[element.id])
+        if (points.length === 1 || expanded) {
+          points.forEach((point) => {
+            const marker = {
+              ...common,
+              key: `page-${element.id}-pin-${point.addressIndex}`,
+              sourceLat: point.lat,
+              sourceLng: point.lng,
+              lat: point.lat,
+              lng: point.lng,
+              city: point.city,
+              postcode: point.postcode,
+              icon: pinIconUrl
+            }
+            // a single-address page is a normal pin (clustered by proximity);
+            // the pins of an expanded / separated page are always drawn
+            ;(points.length === 1 ? clustered : free).push(marker)
+          })
+          return
+        }
+        const center = centroid(points)
+        const imageUrl = element.logo || element.picture
+        const imageDataUrl = imageUrl ? this.pageImages[imageUrl] : ''
+        const url = cached(`page:${colors.join(',')}:${points.length}:${element.name}:${imageDataUrl ? imageUrl : ''}`,
+          () => pageClusterIcon({ colors, count: points.length, name: element.name, imageDataUrl }))
+        clustered.push({
+          ...common,
+          key: `page-${element.id}`,
+          isPageCluster: true,
+          points,
+          places: points.map(placeText).filter(Boolean),
+          title: `${element.name} · ${points.length} addresses`,
+          sourceLat: center.lat,
+          sourceLng: center.lng,
+          lat: center.lat,
+          lng: center.lng,
+          icon: {
+            url,
+            scaledSize: { width: CLUSTER_ICON_SIZE, height: CLUSTER_ICON_SIZE },
+            anchor: { x: CLUSTER_ICON_SIZE / 2, y: CLUSTER_ICON_SIZE / 2 }
+          }
+        })
+      })
+      // coincident markers (any kind) are spread on a ring from zoom 13
+      spreadSharedPins(clustered.concat(free), this.spiderZoom)
+      return { clustered, free }
+    },
+    clusterMarkers: function () {
+      return this.layout.clustered
+    },
+    freeMarkers: function () {
+      return this.layout.free
     },
     legendMode: function () {
       if (this.$route && this.$route.name === 'Events') return 'events'
@@ -315,6 +391,7 @@ export default {
     window.addEventListener('resize', this.updateViewport)
     this.panToBounds()
     this.watchMapZoom()
+    this.loadPageImages()
   },
   destroyed () {
     window.removeEventListener('resize', this.updateViewport)
@@ -328,40 +405,45 @@ export default {
       }
       this.isMobile = mobile
     },
-    escapeHtml (value) {
-      return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    },
+    escapeHtml,
     roleLabel (type) {
-      return ROLE_LABELS[type] || 'Teacher'
+      return ROLE_LABELS[primaryRole(type)]
+    },
+    profileLink (item) {
+      if (item.section === 'Events') return ''
+      return profileUrl(item.slug, item.pageId)
     },
     popupMarkup (item) {
       const esc = this.escapeHtml
       const name = esc(item.name || '')
-      const cancelled = item.section === 'Events' && item.cancelled
-      const role = item.section === 'Events'
-        ? esc(item.type || 'Event')
-        : esc(this.roleLabel(item.type))
-      const place = item.section === 'Events'
+      const isEvent = item.section === 'Events'
+      const cancelled = isEvent && item.cancelled
+      let role
+      let barColors
+      if (isEvent) {
+        role = `<p class="ukata-role">${esc(item.type || 'Event')}</p>`
+        barColors = [ROLE_COLORS.EVENT]
+      } else {
+        const roles = item.roles && item.roles.length ? item.roles : normalizeRoles(item)
+        role = roleChipsHtml(roles, esc)
+        barColors = roleColors(roles)
+      }
+      const ownPlace = isEvent
         ? [item.address, item.city].filter(Boolean).join(' · ')
         : [item.city, item.postcode].filter(Boolean).join(' · ')
-      const lines = []
-      if (place) lines.push(esc(place))
-      if (item.section === 'Events') {
+      const places = item.places && item.places.length ? item.places : [ownPlace]
+      const lines = places.filter(Boolean).map(esc)
+      if (isEvent) {
         if (item.from) lines.push(`${esc(item.from)} – ${esc(item.to || '')}`)
         if (item.organizer) lines.push(esc(item.organizer))
       } else if (item.clubName && item.clubName.trim().toLowerCase() !== String(item.name || '').trim().toLowerCase()) {
         lines.push(esc(item.clubName))
       }
-      if (item.section !== 'Events' && item.contact && item.contact.phone) {
+      if (!isEvent && item.contact && item.contact.phone) {
         lines.push(esc(item.contact.phone))
       }
       const links = []
-      if (item.section !== 'Events' && item.contact) {
+      if (!isEvent && item.contact) {
         if (item.contact.email) {
           links.push(`<a href="mailto:${esc(item.contact.email)}">Email</a>`)
         }
@@ -376,14 +458,22 @@ export default {
         : '<div class="ukata-avatar ukata-avatar--empty" aria-hidden="true"></div>'
       const meta = lines.map((line) => `<p class="ukata-meta">${line}</p>`).join('')
       const linkRow = links.length ? `<p class="ukata-links">${links.join(' · ')}</p>` : ''
-      const title = cancelled ? `${name} <span class="ukata-cancelled">Cancelled</span>` : name
-      return `<div class="ukata-popup"><div class="ukata-popup-bar"></div><div class="ukata-popup-body">${avatar}<div class="ukata-popup-copy"><h3>${title}</h3><p class="ukata-role">${role}</p>${meta}${linkRow}</div></div></div>`
+      let title = cancelled ? `${name} <span class="ukata-cancelled">Cancelled</span>` : name
+      const profile = this.profileLink(item)
+      if (profile) {
+        const href = esc(profile)
+        const label = esc(`Open ${item.name || 'profile'} on Points of Tango`)
+        title = `<a class="ukata-name" href="${href}" target="_blank" rel="noopener noreferrer">${name}</a> <a class="ukata-open" href="${href}" target="_blank" rel="noopener noreferrer" aria-label="${label}" title="${label}">${OPEN_ICON_SVG}</a>`
+      }
+      const bar = `<div class="ukata-popup-bar" style="background:${esc(topBarBackground(barColors))}"></div>`
+      return `<div class="ukata-popup">${bar}<div class="ukata-popup-body">${avatar}<div class="ukata-popup-copy"><h3>${title}</h3>${role}${meta}${linkRow}</div></div></div>`
     },
     closePopup () {
       this.infoWindowOpen = false
       this.sheetOpen = false
       this.activeItem = null
-      this.currentMidx = null
+      this.currentKey = null
+      this.expandedPageId = null
     },
     /**
      * Always frame the same Great Britain box. Marker bounds used to
@@ -404,12 +494,16 @@ export default {
       if (!this.$refs.mapRef) return
       this.$refs.mapRef.$mapPromise.then((map) => {
         this.spiderZoom = map.getZoom()
+        this.mapZoom = map.getZoom()
+        this.recomputeSeparation(this.mapZoom)
         this.clearZoomListener()
         // eslint-disable-next-line
         this._zoomListener = google.maps.event.addListener(map, 'zoom_changed', () => {
           const zoom = map.getZoom()
           clearTimeout(this._spiderTimer)
           this._spiderTimer = setTimeout(() => {
+            this.mapZoom = zoom
+            this.recomputeSeparation(zoom)
             const wasSpread = this.spiderZoom >= SPIDER_FROM_ZOOM
             const spreadNow = zoom >= SPIDER_FROM_ZOOM
             if (!wasSpread && !spreadNow) return
@@ -425,9 +519,32 @@ export default {
       google.maps.event.removeListener(this._zoomListener)
       this._zoomListener = null
     },
+    // Pages whose addresses no longer overlap on screen show their real pins.
+    // Only replaces `separated` when the set changes, so most zoom ticks do not
+    // touch the markers.
+    recomputeSeparation (zoom) {
+      const next = {}
+      this.pageModels.forEach((model) => {
+        if (model.points.length > 1 && isSeparated(model.points, zoom)) next[model.element.id] = true
+      })
+      const sig = (obj) => Object.keys(obj).sort().join('|')
+      if (sig(next) !== sig(this.separated)) this.separated = next
+    },
+    // Logos/pictures of multi-address pages for the page-cluster icon.
+    loadPageImages () {
+      if (!this._imagesAsked) this._imagesAsked = {}
+      this.pageModels.forEach((model) => {
+        const url = model.element.logo || model.element.picture
+        if (model.points.length < 2 || !url || this._imagesAsked[url]) return
+        this._imagesAsked[url] = true
+        loadImageDataUrl(url).then((dataUrl) => {
+          if (dataUrl && !this._isDestroyed) this.$set(this.pageImages, url, dataUrl)
+        })
+      })
+    },
     syncOpenCardPosition () {
       if (!this.activeItem) return
-      const marker = this.markers.find((item) => item.key === this.activeItem.key)
+      const marker = this.layout.clustered.concat(this.layout.free).find((item) => item.key === this.activeItem.key)
       if (!marker) return
       this.activeItem = marker
       this.infoWindowPos = { lat: marker.lat, lng: marker.lng }
@@ -438,14 +555,39 @@ export default {
         }
       }
     },
-    toggleInfoWindow (item, index) {
-      const sameMarker = this.currentMidx === index
-      if (sameMarker && (this.infoWindowOpen || this.sheetOpen)) {
-        this.closePopup()
+    onMarkerClick (item) {
+      if (item.isPageCluster) {
+        this.expandPage(item)
         return
       }
+      // clicking anything outside the expanded page collapses it
+      if (this.expandedPageId != null && item.pageId !== this.expandedPageId) {
+        this.expandedPageId = null
+      }
+      this.toggleInfoWindow(item)
+    },
+    // A page cluster does not zoom like the geographic one: it shows the real
+    // pins of that page and opens its card. Close/coincident addresses end up
+    // above zoom 13, where the spider ring separates them.
+    expandPage (item) {
+      this.expandedPageId = item.pageId
+      this.openCard(item)
+      if (!this.$refs.mapRef) return
+      this.$refs.mapRef.$mapPromise.then((map) => {
+        // eslint-disable-next-line
+        const bounds = new google.maps.LatLngBounds()
+        // eslint-disable-next-line
+        item.points.forEach((point) => bounds.extend(new google.maps.LatLng(point.lat, point.lng)))
+        // eslint-disable-next-line
+        google.maps.event.addListenerOnce(map, 'idle', () => {
+          if (map.getZoom() > MAX_EXPAND_ZOOM) map.setZoom(MAX_EXPAND_ZOOM)
+        })
+        map.fitBounds(bounds, { top: 70, right: 60, left: 60, bottom: this.isMobile ? 260 : 60 })
+      })
+    },
+    openCard (item) {
       this.activeItem = item
-      this.currentMidx = index
+      this.currentKey = item.key
       this.infoWindowPos = { lat: item.lat, lng: item.lng }
       if (this.isMobile) {
         this.infoWindowOpen = false
@@ -458,6 +600,13 @@ export default {
         content: this.popupMarkup(item)
       }
       this.infoWindowOpen = true
+    },
+    toggleInfoWindow (item) {
+      if (this.currentKey === item.key && (this.infoWindowOpen || this.sheetOpen)) {
+        this.closePopup()
+        return
+      }
+      this.openCard(item)
     }
   }
 }
@@ -517,8 +666,17 @@ export default {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #1B82C5;
+  background: #191919;
   border: 2px solid #fff;
+}
+
+.swatch--page {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: conic-gradient(#C2410C 0 33.3%, #8900A0 0 66.6%, #D61F26 0);
+  -webkit-mask: radial-gradient(circle, transparent 4px, #000 4.5px);
+  mask: radial-gradient(circle, transparent 4px, #000 4.5px);
 }
 
 .map-sheet {
@@ -546,7 +704,7 @@ export default {
 
 .ukata-popup-bar {
   height: 6px;
-  background: #1B82C5;
+  background: #191919; /* overridden inline with the role color(s) of the page */
 }
 
 .ukata-popup-body {
@@ -585,6 +743,46 @@ export default {
   color: #1B82C5;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.ukata-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 2px 0 6px;
+}
+
+.ukata-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ukata-popup-copy h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ukata-popup-copy h3 a.ukata-name:hover {
+  text-decoration: underline;
+}
+
+.ukata-popup-copy h3 a.ukata-open {
+  display: inline-block;
+  margin-left: 2px;
+  color: #585858;
+  vertical-align: baseline;
+}
+
+.ukata-popup-copy h3 a.ukata-open:hover,
+.ukata-popup-copy h3 a.ukata-open:focus {
+  color: #191919;
 }
 
 .ukata-meta {

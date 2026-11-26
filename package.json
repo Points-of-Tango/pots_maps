@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "node scripts/vue-cli.js serve",
     "build": "node scripts/vue-cli.js build",
-    "lint": "node scripts/vue-cli.js lint"
+    "lint": "node scripts/vue-cli.js lint",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.4.2",

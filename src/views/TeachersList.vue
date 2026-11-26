@@ -65,10 +65,21 @@
               class="rounded-circle mr-3 img-fluid"
               alt="Teacher picture"
             />
-            {{ data.item.name }}
+            <template v-if="profileLink(data.item)">
+              <a :href="profileLink(data.item)" target="_blank" rel="noopener noreferrer">{{ data.item.name }}</a>
+              <a
+                :href="profileLink(data.item)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="ml-1"
+                :aria-label="`Open ${data.item.name} on Points of Tango`"
+                :title="`Open ${data.item.name} on Points of Tango`"
+              ><font-awesome-icon icon="fa-solid fa-up-right-from-square" /></a>
+            </template>
+            <template v-else>{{ data.item.name }}</template>
           </template>
           <template #cell(contact)="data">
-            <p><a :href="`${webpagelink(data.item)}`" target="blank">{{ data.item.contact.link }}</a></p>
+            <p><a :href="`${webpagelink(data.item)}`" target="_blank" rel="noopener noreferrer">{{ data.item.contact.link }}</a></p>
             <p><a :href="`mailto:${data.item.contact.email}`">{{ data.item.contact.email }}</a></p>
             <p>{{ data.item.contact.phone }}</p>
             <span v-if="data.item.contact.facebook">
@@ -110,6 +121,8 @@
     <div class="wrapper-flex" v-if="gridView">
       <SmallProfileCard v-for="(item, index) in pagedTeachers"
         :key="item.id || index"
+        :id="item.id"
+        :slug="item.slug"
         :name="item.name"
         :avatar-image-url="item.logo"
         :cover-image-url="item.picture"
@@ -139,6 +152,7 @@
 </template>
 
 <script>
+import { profileUrl } from '@/utils/profileUrl'
 
 export default {
   props: {
@@ -192,6 +206,9 @@ export default {
     pagedTeachers () {
       const start = (this.currentPage - 1) * this.perPage
       return this.sortedTeachersList.slice(start, start + this.perPage)
+    },
+    profileLink: function () {
+      return (item) => profileUrl(item.slug, item.id)
     },
     webpagelink: function () {
       return (item) => {
