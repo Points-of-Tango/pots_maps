@@ -50,6 +50,7 @@
       >
         <b-pagination
           v-model="currentPage"
+          @change="scrollToStart"
           :total-rows="sortedTeachersList.length"
           :per-page="perPage"
           align="fill"
@@ -230,14 +231,6 @@ export default {
     },
     teachers () {
       this.currentPage = 1
-    },
-    currentPage () {
-      this.$nextTick(() => {
-        const el = this.$el
-        if (el && el.scrollIntoView) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      })
     }
   },
   mounted () {
@@ -252,6 +245,17 @@ export default {
           return key && value.includes(key)
         }
       }
+    },
+    // Only when the user changes the page with the paginator (b-pagination
+    // `change`), not when the search/teachers watchers reset currentPage to 1.
+    scrollToStart () {
+      this.$nextTick(() => {
+        const el = this.$el
+        if (!el || !el.scrollIntoView) return
+        const reduced = typeof window !== 'undefined' && window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+      })
     },
     toggleResultsViewMode () {
       this.gridView = !this.gridView

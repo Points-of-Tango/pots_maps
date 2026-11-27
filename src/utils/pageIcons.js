@@ -41,16 +41,38 @@ function ringMarkup (cx, cy, r, width, colors) {
   }).join('')
 }
 
-export function pinIcon (color) {
+// Small non-color mark inside the pin head, so roles are told apart without
+// relying on hue (deuteranopia). `cx, cy` is the centre, `r` the half size.
+export function glyphMarkup (glyph, cx, cy, r, color) {
   const fill = safeColor(color)
-  return dataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="26" height="36" viewBox="0 0 26 36"><path d="${PIN_PATH}" fill="${fill}" stroke="#ffffff" stroke-width="1.6"/><circle cx="13" cy="15" r="4.2" fill="#ffffff"/></svg>`)
+  switch (glyph) {
+    case 'triangle':
+      return `<path d="M${cx} ${cy - r}L${cx + r} ${cy + r * 0.8}H${cx - r}z" fill="${fill}"/>`
+    case 'disc':
+      return `<circle cx="${cx}" cy="${cy}" r="${r * 0.9}" fill="${fill}"/>`
+    case 'square':
+      return `<rect x="${cx - r * 0.85}" y="${cy - r * 0.85}" width="${r * 1.7}" height="${r * 1.7}" fill="${fill}"/>`
+    case 'diamond':
+      return `<path d="M${cx} ${cy - r * 1.15}L${cx + r * 1.15} ${cy}L${cx} ${cy + r * 1.15}L${cx - r * 1.15} ${cy}z" fill="${fill}"/>`
+    case 'dash':
+      return `<rect x="${cx - r}" y="${cy - r * 0.3}" width="${r * 2}" height="${r * 0.6}" fill="${fill}"/>`
+    default:
+      return ''
+  }
+}
+
+// Single-role pin: white head with the role glyph in the role color.
+export function pinIcon (color, glyph) {
+  const fill = safeColor(color)
+  return dataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="26" height="36" viewBox="0 0 26 36"><path d="${PIN_PATH}" fill="${fill}" stroke="#ffffff" stroke-width="1.6"/><circle cx="13" cy="15" r="${glyph && glyph !== 'none' ? 5.4 : 4.2}" fill="#ffffff"/>${glyphMarkup(glyph, 13, 15, 3.3, fill)}</svg>`)
 }
 
 // Single-address page with several roles: same pin, but the white dot becomes
 // a ring with one slice per role (same ring language as the page cluster).
-export function multiRolePinIcon (colors) {
+// The glyph of the primary role sits in the hole of the ring.
+export function multiRolePinIcon (colors, glyph) {
   const fill = safeColor(colors[0])
-  return dataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="26" height="36" viewBox="0 0 26 36"><path d="${PIN_PATH}" fill="${fill}" stroke="#ffffff" stroke-width="1.6"/><circle cx="13" cy="15" r="7" fill="#ffffff"/>${ringMarkup(13, 15, 4.9, 3.6, colors)}</svg>`)
+  return dataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="26" height="36" viewBox="0 0 26 36"><path d="${PIN_PATH}" fill="${fill}" stroke="#ffffff" stroke-width="1.6"/><circle cx="13" cy="15" r="7.2" fill="#ffffff"/>${ringMarkup(13, 15, 5.4, 3, colors)}${glyphMarkup(glyph, 13, 15, 2, '#191919')}</svg>`)
 }
 
 export function initialsOf (name) {

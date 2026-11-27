@@ -54,8 +54,8 @@
           <div><span class="swatch" :style="{ background: roleColors.PROFESSIONAL }"></span> Teachers</div>
           <div><span class="swatch" :style="{ background: roleColors.ORGANISER }"></span> Tango club</div>
           <div><span class="swatch" :style="{ background: roleColors.DJ }"></span> DJs</div>
-          <div><span class="swatch" :style="{ background: roleColors.MUSICIAN }"></span> Musicians</div>
           <div><span class="swatch" :style="{ background: roleColors.ORCHESTRA }"></span> Orchestras</div>
+          <div><span class="swatch" :style="{ background: roleColors.OTHER }"></span> Other</div>
         </template>
         <div v-if="legendMode !== 'events'"><span class="swatch swatch--page"></span> Page, several addresses</div>
         <div><span class="swatch swatch--cluster"></span> Nearby places</div>
@@ -76,7 +76,7 @@
 <script>
 import GmapCluster from 'vue2-google-maps/dist/components/cluster'
 import {
-  ROLE_COLORS, ROLE_LABELS, normalizeRoles, primaryRole, roleColors,
+  ROLE_COLORS, ROLE_ORDER, normalizeRoles, roleColors, roleGlyph, roleLabels,
   roleChipsHtml, topBarBackground, escapeHtml
 } from '@/utils/roles'
 import { pagePoints, centroid, isSeparated } from '@/utils/pageClusters'
@@ -84,14 +84,16 @@ import { pinIcon, multiRolePinIcon, pageClusterIcon, geoClusterIcon, CLUSTER_ICO
 import { profileUrl } from '@/utils/profileUrl'
 import { loadImageDataUrl } from '@/utils/imageDataUrl'
 
-const ICONS = {
-  PROFESSIONAL: pinIcon(ROLE_COLORS.PROFESSIONAL),
-  ORGANISER: pinIcon(ROLE_COLORS.ORGANISER),
-  DJ: pinIcon(ROLE_COLORS.DJ),
-  MUSICIAN: pinIcon(ROLE_COLORS.MUSICIAN),
-  ORCHESTRA: pinIcon(ROLE_COLORS.ORCHESTRA),
-  EVENT: pinIcon(ROLE_COLORS.EVENT)
-}
+// One pin per role (every role of ROLE_ORDER, including OTHER) plus the event pin.
+const ICONS = {}
+ROLE_ORDER.concat('EVENT').forEach((role) => {
+  ICONS[role] = pinIcon(ROLE_COLORS[role], roleGlyph(role))
+})
+
+// Time to wait before publishing a burst of downloaded images in one go
+const IMAGES_BATCH_MS = 100
+// If `idle` does not come after an expand fitBounds (view did not change), stop waiting
+const EXPAND_IDLE_TIMEOUT_MS = 400
 
 // "open outside" icon (FontAwesome 6 up-right-from-square) for the popup HTML string
 const OPEN_ICON_SVG = '<svg class="ukata-open-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12" aria-hidden="true" focusable="false"><path fill="currentColor" d="M352 0c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9L370.7 96 201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L416 141.3l41.4 41.4c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V32c0-17.7-14.3-32-32-32H352zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></svg>'
@@ -281,7 +283,7 @@ export default {
           lat,
           lng,
           name: element.name,
-          title: element.name,
+          title: element.type ? `${element.name} · ${element.type}` : element.name,
           cancelled: element.cancelled,
           type: element.type,
           logo: element.logo,
@@ -300,7 +302,7 @@ export default {
           pageId: element.id,
           slug: element.slug,
           name: element.name,
-          title: element.name,
+          title: `${element.name} · ${roleLabels(roles)}`,
           picture: element.picture,
           logo: element.logo,
           section: element.section,
@@ -313,8 +315,8 @@ export default {
           addressCount: points.length
         }
         const pinIconUrl = roles.length > 1
-          ? cached('multi:' + colors.join(','), () => multiRolePinIcon(colors))
-          : ICONS[primaryRole(element.type)]
+          ? cached('multi:' + colors.join(',') + ':' + roleGlyph(roles[0]), () => multiRolePinIcon(colors, roleGlyph(roles[0])))
+          : ICONS[roles[0]]
         const expanded = points.length > 1 && (this.expandedPageId === element.id || this.separated[element.id])
         if (points.length === 1 || expanded) {
           points.forEach((point) => {
@@ -346,7 +348,7 @@ export default {
           isPageCluster: true,
           points,
           places: points.map(placeText).filter(Boolean),
-          title: `${element.name} · ${points.length} addresses`,
+          title: `${element.name} · ${points.length} addresses · ${roleLabels(roles)}`,
           sourceLat: center.lat,
           sourceLng: center.lng,
           lat: center.lat,
@@ -396,6 +398,9 @@ export default {
   destroyed () {
     window.removeEventListener('resize', this.updateViewport)
     this.clearZoomListener()
+    this.cancelExpandIdle()
+    clearTimeout(this._imagesTimer)
+    this._imagesTimer = null
   },
   methods: {
     updateViewport () {
@@ -406,9 +411,6 @@ export default {
       this.isMobile = mobile
     },
     escapeHtml,
-    roleLabel (type) {
-      return ROLE_LABELS[primaryRole(type)]
-    },
     profileLink (item) {
       if (item.section === 'Events') return ''
       return profileUrl(item.slug, item.pageId)
@@ -474,6 +476,7 @@ export default {
       this.activeItem = null
       this.currentKey = null
       this.expandedPageId = null
+      this.cancelExpandIdle()
     },
     /**
      * Always frame the same Great Britain box. Marker bounds used to
@@ -538,9 +541,22 @@ export default {
         if (model.points.length < 2 || !url || this._imagesAsked[url]) return
         this._imagesAsked[url] = true
         loadImageDataUrl(url).then((dataUrl) => {
-          if (dataUrl && !this._isDestroyed) this.$set(this.pageImages, url, dataUrl)
+          if (!dataUrl || this._isDestroyed) return
+          // non-reactive bag: `layout` depends on `pageImages`, so it is
+          // published once per batch instead of once per image
+          if (!this._pageImageBag) this._pageImageBag = {}
+          this._pageImageBag[url] = dataUrl
+          this.schedulePageImages()
         })
       })
+    },
+    schedulePageImages () {
+      if (this._imagesTimer) return
+      this._imagesTimer = setTimeout(() => {
+        this._imagesTimer = null
+        if (this._isDestroyed) return
+        this.pageImages = { ...this._pageImageBag }
+      }, IMAGES_BATCH_MS)
     },
     syncOpenCardPosition () {
       if (!this.activeItem) return
@@ -570,20 +586,48 @@ export default {
     // pins of that page and opens its card. Close/coincident addresses end up
     // above zoom 13, where the spider ring separates them.
     expandPage (item) {
+      this.cancelExpandIdle()
       this.expandedPageId = item.pageId
       this.openCard(item)
       if (!this.$refs.mapRef) return
+      const token = this._expandToken
       this.$refs.mapRef.$mapPromise.then((map) => {
+        // closed, destroyed or another page expanded while the map was loading
+        if (this._isDestroyed || token !== this._expandToken) return
         // eslint-disable-next-line
         const bounds = new google.maps.LatLngBounds()
         // eslint-disable-next-line
         item.points.forEach((point) => bounds.extend(new google.maps.LatLng(point.lat, point.lng)))
+        // The cap is applied through maxZoom while fitBounds runs, so the map
+        // goes straight to the final zoom (no second setZoom jump). maxZoom is
+        // restored on the next `idle`, or after a short timeout if the view
+        // did not change and `idle` never comes. Nothing stays armed.
+        const previousMaxZoom = map.get('maxZoom')
+        map.setOptions({ maxZoom: MAX_EXPAND_ZOOM })
+        const restore = () => {
+          if (this._expandState && this._expandState.map === map) this.cancelExpandIdle()
+        }
         // eslint-disable-next-line
-        google.maps.event.addListenerOnce(map, 'idle', () => {
-          if (map.getZoom() > MAX_EXPAND_ZOOM) map.setZoom(MAX_EXPAND_ZOOM)
-        })
+        const listener = google.maps.event.addListenerOnce(map, 'idle', restore)
+        this._expandState = {
+          map,
+          listener,
+          previousMaxZoom,
+          timer: setTimeout(restore, EXPAND_IDLE_TIMEOUT_MS)
+        }
         map.fitBounds(bounds, { top: 70, right: 60, left: 60, bottom: this.isMobile ? 260 : 60 })
       })
+    },
+    // Removes the pending idle listener/timer of expandPage and restores maxZoom.
+    cancelExpandIdle () {
+      this._expandToken = (this._expandToken || 0) + 1
+      const state = this._expandState
+      if (!state) return
+      this._expandState = null
+      clearTimeout(state.timer)
+      // eslint-disable-next-line
+      google.maps.event.removeListener(state.listener)
+      state.map.setOptions({ maxZoom: state.previousMaxZoom == null ? null : state.previousMaxZoom })
     },
     openCard (item) {
       this.activeItem = item
@@ -674,7 +718,7 @@ export default {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: conic-gradient(#C2410C 0 33.3%, #8900A0 0 66.6%, #D61F26 0);
+  background: conic-gradient(#C2410C 0 33.3%, #8900A0 0 66.6%, #B0125B 0);
   -webkit-mask: radial-gradient(circle, transparent 4px, #000 4.5px);
   mask: radial-gradient(circle, transparent 4px, #000 4.5px);
 }
@@ -740,7 +784,7 @@ export default {
   margin: 0 0 6px;
   font-size: 12px;
   font-weight: 700;
-  color: #1B82C5;
+  color: #156A9F; /* 5.8:1 on white (#1B82C5 was 4.0:1) */
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -797,13 +841,13 @@ export default {
 }
 
 .ukata-links a {
-  color: #1B82C5;
+  color: #156A9F;
   font-weight: 600;
   text-decoration: none;
 }
 
 .ukata-links a:hover {
-  color: #156A9F;
+  color: #0F5280;
   text-decoration: underline;
 }
 
