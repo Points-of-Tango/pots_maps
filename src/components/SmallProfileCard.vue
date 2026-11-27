@@ -7,7 +7,16 @@
     <img v-else src="https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" alt="" class="profile-img">
     <div class="card-content">
       <h1
-        :style="{'color': textColor}" class="name">{{ name }}</h1>
+        :style="{'color': textColor}" class="name">
+        <template v-if="profileLink">
+          <a :href="profileLink" target="_blank" rel="noopener noreferrer" class="profile-link">{{ name }}</a>
+          <a :href="profileLink" target="_blank" rel="noopener noreferrer" class="profile-open"
+            :aria-label="`Open ${name} on Points of Tango`" :title="`Open ${name} on Points of Tango`">
+            <font-awesome-icon icon="fa-solid fa-up-right-from-square" />
+          </a>
+        </template>
+        <template v-else>{{ name }}</template>
+      </h1>
       <p v-for="(location, index) in locations" :key="index"
         :style="{'color': textColor}"
         class="description">
@@ -20,7 +29,7 @@
     </div>
     <footer class="card-footer">
       <span v-if="webpagelink" :style="{'color': textColor}" class="text-line">
-        <a :href="webpagelink" target="blank">
+        <a :href="webpagelink" target="_blank" rel="noopener noreferrer">
           <font-awesome-icon icon="fa-solid fa-globe" />
         </a>
       </span>
@@ -44,8 +53,12 @@
 </template>
 
 <script>
+import { profileUrl } from '@/utils/profileUrl'
+
 export default {
   props: {
+    id: [String, Number],
+    slug: String,
     avatarImageUrl: String,
     name: String,
     description: String,
@@ -59,6 +72,9 @@ export default {
     return {}
   },
   computed: {
+    profileLink: function () {
+      return profileUrl(this.slug, this.id)
+    },
     webpagelink: function () {
       if (this.contact && this.contact.link) {
         if (this.contact.link.startsWith('http://') || this.contact.link.startsWith('https://')) {
@@ -113,6 +129,20 @@ export default {
   object-fit: cover;
   z-index: 1;
   position: relative;
+}
+
+.name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.name a:hover {
+  text-decoration: underline;
+}
+
+.name .profile-open {
+  font-size: 0.9rem;
+  margin-left: 0.25rem;
 }
 
 .name {
